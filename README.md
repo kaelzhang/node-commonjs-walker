@@ -46,7 +46,7 @@ walker('/path/to/index.js', function(err, tree, nodes){
 
 The `tree` object will be something like:
 
-```json
+```js
 {
 	id: '/path/to/index.js',
 	dependents: [],
@@ -69,7 +69,7 @@ The `tree` object will be something like:
 
 The `nodes` object is the `path->node` hashmap.
 
-```json
+```js
 {
 	'/path/to/index.js': tree,
 	'/path/to/a.js': tree.dependencies[0]
