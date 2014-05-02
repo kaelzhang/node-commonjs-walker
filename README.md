@@ -11,15 +11,77 @@ var walker = require('commonjs-walker');
 ## walker(entry, [options,] callback)
 
 ```js
-walker('/path/to/entry.js', options, function(err, tree){
+walker('/path/to/entry.js', options, function(err, tree, nodes){
 	// ...
 });
 ```
+
+If the file structure of your project is:
+
+```
+/path/to
+       |--- index.js
+       |--- a.js
+```
+
+index.js:
+
+```js
+require('./a');
+```
+
+a.js
+
+```js
+// there's nothing.
+```
+
+Then
+
+```js
+walker('/path/to/index.js', function(err, tree, nodes){
+	console.log(tree);
+})
+```
+
+The `tree` object will be something like:
+
+```json
+{
+	id: '/path/to/index.js',
+	dependents: [],
+	isEntryPoint: true,
+	unsolvedDependencies: ['./a'],
+	dependencies: [
+		{
+			id: '/path/to/a.js',
+			dependents: [
+				tree // points to `index.js`
+			],
+			dependencies: [],
+			unsolvedDependencies: [],
+			code: <Buffer>
+		}
+	],
+	code: <Buffer>
+}
+```
+
+The `nodes` object is the `path->node` hashmap.
+
+```json
+{
+	'/path/to/index.js': tree,
+	'/path/to/a.js': tree.dependencies[0]
+}
+```
+
 
 Walks down from a entry point, such as `package.main` of commonjs, and tries to create a `walker.Module` instance of the top level. 
 
 - entry `Path` the absolute path of the entry point.
 - tree `walker.Module` tree of `walker.Module`
+- nodes `Object` the hashmap of `<path>: <walker.Module>`
 
 #### options
 
@@ -51,7 +113,7 @@ isForeign | `Boolean` | whether the current module is from a foreign package.
 
 Property | Type | Description
 -------- | ---- | -----------
-code | `String` | the file content of the current module.
+code | `Buffer` | the file content of the current module.
 dependencies | `Array.<walker.Module>` | the dependencies of the current module. If the module has no dependencies, it will be `[]`
 unsolvedDependencies | `Array.<String>` | the array contains the items `require()`d by the module.
 
