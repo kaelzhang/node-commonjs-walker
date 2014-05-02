@@ -49,7 +49,7 @@ Walker.prototype._walk = function() {
     }
 
     // Returns the node of the entry point
-    self.callback(null, self._getNode(entry));
+    self.callback(null, self._getNode(entry), self.nodes);
   }
 
   var err;
@@ -95,6 +95,17 @@ Walker.prototype._parseFile = function(path, callback) {
 };
 
 
+Walker.prototype._ensureExt = function(path, ext) {
+  var regex = new RegExp('\\.' + ext + '$', 'i');
+
+  if (!regex.test(path)) {
+    path += '.' + ext;
+  }
+
+  return path;
+};
+
+
 Walker.prototype._dealDependencies = function(data, callback) {
   var dependencies = data.dependencies;
   var path = data.path;
@@ -109,7 +120,8 @@ Walker.prototype._dealDependencies = function(data, callback) {
   async.each(dependencies, function (dep, done) {
     // './foo'
     if (self._isRelativePath(dep)) {
-      dep = node_path.join(path, dep);
+      dep = node_path.join(node_path.dirname(path), dep);
+      dep = self._ensureExt(dep, 'js');
     }
 
     var sub_node = self._getNode(dep);
@@ -222,7 +234,7 @@ Walker.prototype._isRelativePath = function(dep) {
   // 'abc' -> true
   // './abc' -> false
   // '../abc' -> false
-  return dep.indexOf('./') === 0 && dep.indexOf('../') === 0;
+  return dep.indexOf('./') === 0 || dep.indexOf('../') === 0;
 };
 
 
