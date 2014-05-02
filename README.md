@@ -91,7 +91,6 @@ All options are optional. By default, `walker` works in a very strict mode.
 Option | Type | Default | Description
 ------ | ---- | ------- | ------------
 pkg    | `Object` | undefined | the object of package.json
-noCheckDepVersion | `Boolean` | false | whether should check the version of foreign packages. If `options.pkg` is not specified, walker will not check versions.
 noCheckCircular | `Boolean` | false | whether should check circular dependencies
 noStrictRequire | `Boolean` | false | whether should check the usage of method `require()`
 
@@ -107,7 +106,6 @@ Property | Type | Description
 id | `String` | the id of the module
 isEntryPoint | `Boolean` | whether the current module is the entry point
 dependents   | `Array.<walker.module>` | the dependent modules. If there's no dependents, it will be `[]`
-version | `semver` | the version of the current module.
 isForeign | `Boolean` | whether the current module is from a foreign package.
 
 **Properties only if `isForeign` is false: **
@@ -128,6 +126,8 @@ unsolvedDependencies | `Array.<String>` | the array contains the items `require(
 - stack `String` the origin error.stack
 - data `Object` the object of the major information of the error, this is useful for i18n.
 
+
+## Error codes
 
 
 

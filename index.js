@@ -20,15 +20,6 @@ function Walker (entry, options, callback) {
   this.entry = node_path.resolve(entry);
   this.options = options;
 
-  if (!options.pkg) {
-    options.noCheckDepVersion = true;
-    options.pkg = {};
-  }
-
-  if (!options.pkg.dependencies) {
-    options.pkg.dependencies = {};
-  }
-
   this.callback = callback;
   this._walk();
 }
@@ -85,11 +76,10 @@ Walker.prototype._walk = function() {
 
 
 Walker.prototype._parseFile = function(path, callback) {
-  var options = this.options;
   var self = this;
 
   parser.parse(path, {
-    noStrictRequire: options.noStrictRequire
+    noStrictRequire: this.options.noStrictRequire
 
   }, callback);
 };
@@ -127,7 +117,13 @@ Walker.prototype._dealDependencies = function(data, callback) {
     var sub_node = self._getNode(dep);
 
     if (sub_node) {
-      var circular_trace = self._checkCircular(node, sub_node);
+
+      // We only check the node if it meets the conditions below:
+      // 1. already exists: all new nodes are innocent.
+      // 2. but assigned as a dependency of anothor node
+
+      // If one of the ancestor dependents of `node` is `current`, it forms a circle.
+      var circular_trace = circular.trace(node, sub_node);
       if (circular_trace && !options.noCheckCircular) {
         return done({
           code: 'ECIRCULAR',
@@ -149,36 +145,6 @@ Walker.prototype._dealDependencies = function(data, callback) {
     self._addDependent(node, sub_node);
 
     if (sub_node.isForeign) {
-      var id = sub_node.id;
-      var version = options.pkg.dependencies[id];
-      var check_version = !options.noCheckDepVersion;
-
-      if (!version && check_version) {
-        return done({
-          code: 'EPKGNINSTALL',
-          message: 'Package "' + id + '" required by "' + path + '"  is not found in package object, please install first.',
-          data: {
-            id: id,
-            path: path
-          }
-        });
-      }
-
-      var parsed_version = semver.valid(version) || semver.validRange(version);
-
-      if (!parsed_version && check_version) {
-        return done({
-          code: 'EINVALIDV',
-          message: 'The version or range "' + version + '" for package "' + id + '" is not valid.',
-          data: {
-            version: version,
-            id: id
-          }
-        });
-      }
-
-      sub_node.version = parsed_version;
-
       // We do NOT parse foreign modules
       return done(null);
     }
@@ -202,6 +168,11 @@ Walker.prototype._addDependent = function(dependent, dependency) {
 };
 
 
+// Creates the node by id if not exists.
+// No fault tolerance for the sake of private method
+// @param {string} id 
+// - `path` must be absolute path if is a relative module
+// - package name for foreign module
 Walker.prototype._createNode = function(id) {
   var node = this.nodes[id];
 
@@ -240,15 +211,6 @@ Walker.prototype._isRelativePath = function(dep) {
 
 Walker.prototype._getNode = function(path) {
   return this.nodes[path];
-};
-
-// We only check the node if it meets the conditions below:
-// 1. already exists
-// 2. but assigned as a dependency of anothor node
-
-// If one of the ancestor dependents of `node` is `current`, it forms a circle.
-Walker.prototype._checkCircular = function(current, node) {
-  return circular.trace(current, node);
 };
 
 
