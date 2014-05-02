@@ -1,18 +1,21 @@
 {
   "name": "commonjs-walker",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Analyzer and tree walker for commonjs.",
   "main": "index.js",
   "scripts": {
     "test": "make test"
   },
-  "kewords": [
+  "keywords": [
+    "commonjs-walker",
     "analyzer",
     "commonjs",
     "dependencies",
     "parser",
     "walker",
-    "tree"
+    "tree",
+    "require",
+    "npm"
   ],
   "repository": {
     "type": "git",
