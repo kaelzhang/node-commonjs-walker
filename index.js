@@ -100,6 +100,7 @@ Walker.prototype._dealDependencies = function(data, callback) {
 
   node.unsolvedDependencies = dependencies;
   node.dependencies = [];
+  node.code = data.code;
 
   var self = this;
   var options = this.options;
@@ -131,36 +132,46 @@ Walker.prototype._dealDependencies = function(data, callback) {
     }
 
     sub_node = self._createNode(dep);
-    var id = sub_node.id;
-    var version = options.pkg.dependencies[id];
-    var check_version = sub_node.isForeign && !options.noCheckDepVersion;
-
-    if (!version && check_version) {
-      return done({
-        code: 'EPKGNINSTALL',
-        message: 'Package "' + id + '" required by "' + path + '"  is not found in package object, please install first.',
-        data: {
-          id: id,
-          path: path
-        }
-      });
-    }
-
-    var parsed_version = semver.valid(version) || semver.validRange(version);
-
-    if (!parsed_version && check_version) {
-      return done({
-        code: 'EINVALIDV',
-        message: 'The version or range "' + version + '" for package "' + id + '" is not valid.',
-        data: {
-          version: version,
-          id: id
-        }
-      });
-    }
-
-    sub_node.version = parsed_version;
     self._addDependent(node, sub_node);
+
+    if (sub_node.isForeign) {
+      var id = sub_node.id;
+      var version = options.pkg.dependencies[id];
+      var check_version =  && !options.noCheckDepVersion;
+
+      if (!version && check_version) {
+        return done({
+          code: 'EPKGNINSTALL',
+          message: 'Package "' + id + '" required by "' + path + '"  is not found in package object, please install first.',
+          data: {
+            id: id,
+            path: path
+          }
+        });
+      }
+
+      var parsed_version = semver.valid(version) || semver.validRange(version);
+
+      if (!parsed_version && check_version) {
+        return done({
+          code: 'EINVALIDV',
+          message: 'The version or range "' + version + '" for package "' + id + '" is not valid.',
+          data: {
+            version: version,
+            id: id
+          }
+        });
+      }
+
+      sub_node.version = parsed_version;
+
+      // We do NOT parse foreign modules
+      return done(null);
+    }
+    
+    self.queue.push({
+      path: dep
+    });
 
     done(null);
 
@@ -172,6 +183,8 @@ Walker.prototype._addDependent = function(dependent, dependency) {
   if (!~dependency.dependents.indexOf(dependent)) {
     dependency.dependents.push(dependent);
   }
+
+  dependent.dependencies.push(dependency);
 };
 
 
