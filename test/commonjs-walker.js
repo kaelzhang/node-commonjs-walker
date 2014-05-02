@@ -1,7 +1,7 @@
 'use strict';
 
 var expect = require('chai').expect;
-var utils = require('../walker');
+var parser = require('../parser');
 var node_path = require('path');
 var util = require('util');
 
@@ -39,11 +39,11 @@ var cases = [
   }
 ];
 
-describe("_walker.get_dependencies()", function(){
+describe("parser.get_dependencies()", function(){
   cases.forEach(function (c) {
     it(c.desc, function(done){
-      var file = node_path.join(__dirname, 'fixtures', 'single', c.file);
-      utils.get_dependencies(file, c.options || {}, function (err, dependencies) {
+      var file = node_path.join(__dirname, 'fixtures', 'parser', c.file);
+      parser.get_dependencies(file, c.options || {}, function (err, dependencies) {
         done();
         expect(!err).to.equal(!c.error); 
         if (util.isArray(c.deps)) {
