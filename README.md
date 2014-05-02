@@ -30,21 +30,22 @@ index.js:
 require('./a');
 ```
 
-a.js
+a.js:
 
 ```js
 // there's nothing.
 ```
 
-Then
+Code:
 
 ```js
 walker('/path/to/index.js', function(err, tree, nodes){
 	console.log(tree);
+	console.log(nodes);
 })
 ```
 
-The `tree` object will be something like:
+Then, the `tree` object will be something like:
 
 ```js
 {
