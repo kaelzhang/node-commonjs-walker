@@ -38,7 +38,6 @@
   },
   "dependencies": {
     "esprima": "^1.2.0",
-    "semver": "^2.2.1",
     "async": "^0.8.0"
   }
 }

@@ -4,7 +4,6 @@ module.exports = walker;
 
 var parser = require('./lib/parser');
 var circular = require('./lib/circular');
-var semver = require('semver');
 var node_path = require('path');
 var async = require('async');
 
