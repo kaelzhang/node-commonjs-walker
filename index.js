@@ -1,5 +1,7 @@
 'use strict';
 
+module.exports = walker;
+
 var parser = require('./lib/parser');
 var circular = require('./lib/circular');
 var semver = require('semver');
@@ -86,7 +88,7 @@ Walker.prototype._parseFile = function(path, callback) {
   var options = this.options;
   var self = this;
 
-  parser.get_dependencies(path, {
+  parser.parse(path, {
     noStrictRequire: options.noStrictRequire
 
   }, callback);
@@ -137,7 +139,7 @@ Walker.prototype._dealDependencies = function(data, callback) {
     if (sub_node.isForeign) {
       var id = sub_node.id;
       var version = options.pkg.dependencies[id];
-      var check_version =  && !options.noCheckDepVersion;
+      var check_version = !options.noCheckDepVersion;
 
       if (!version && check_version) {
         return done({
