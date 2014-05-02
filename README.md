@@ -108,7 +108,7 @@ isEntryPoint | `Boolean` | whether the current module is the entry point
 dependents   | `Array.<walker.module>` | the dependent modules. If there's no dependents, it will be `[]`
 isForeign | `Boolean` | whether the current module is from a foreign package.
 
-**Properties only if `isForeign` is false: **
+** Properties only if `isForeign` is false: **
 
 Property | Type | Description
 -------- | ---- | -----------
