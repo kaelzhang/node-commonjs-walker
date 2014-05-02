@@ -27,27 +27,24 @@ Walks down from a entry point, such as `package.main` of commonjs, and tries to 
 - module `walker.Module`
 
 
-## Class: walker.Module
+## Struct: walker.Module
 
-### .parent()
+Actually, there is no `walker.Module` exists. We only use it to declare and describe the structure of the module.
 
-Returns `walker.Module` the parent module node. If is the module of the entry point, this method will returns `null`
+- isEntryPoint `Boolean` whether the current module is the entry point
 
-### .isEntryPoint()
+- dependencies `Array.<walker.Module>` the dependencies of the current module. If the module has no dependencies, it will be `[]`
 
-Returns `Boolean` whether the current module is the entry point
+- arrayDependencies `Array.<String>` the array contains the items `require()`d by the module.
 
-### .dependencies()
+- version `semver` the version of the current module.
 
-Returns `Array.<walker.Module>` the shadow copy of the dependencies of the current module
+- code `String` the file content of the current module.
 
-### .version()
+- path `path` the path of the module
 
-Returns `semver` the version of the current module
+- isForeign `Boolean` whether the current module is from a foreign package.
 
-### .isForeign()
-
-Returns `Boolean` whether the current module is from a foreign package.
 
 
 ## Class: walker.Error
