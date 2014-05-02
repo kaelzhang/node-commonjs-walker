@@ -10,17 +10,17 @@ var util = require('util');
 walker.get_dependencies = function (path, options, callback) {
   fs.readFile(path, function (err, content) {
     if (err) {
-      return callback(walker._error({
+      return callback({
         code: 'EREADFILE',
         message: 'Error reading "' + path + '": ' + err.stack,
         data: {
           path: path,
           error: err
         }
-      }, err));
+      });
     }
 
-    walker._parse_js(content, function (err, ast) {
+    walker._parse_js(content.toString(), function (err, ast) {
       if (err) {
         return callback({
           code: 'EPARSEJS',
@@ -46,6 +46,14 @@ walker.get_dependencies = function (path, options, callback) {
           }
         });
       }
+
+      // Removes duplicate items
+      dependencies = dependencies.reduce(function (prev, current) {
+        if (!~prev.indexOf(current)) {
+          prev.push(current);
+        }
+        return prev;
+      }, []);
 
       callback(null, dependencies);
     });
@@ -80,7 +88,7 @@ walker._parse_dependencies = function (node, host, options) {
     && node.callee.type === 'Identifier'
     && node.callee.name === 'require'
   ) {
-    var args = node.callee.arguments;
+    var args = node.arguments;
     var loc = node.callee.loc.start;
     var loc_text = pos_text(loc);
 
@@ -92,7 +100,7 @@ walker._parse_dependencies = function (node, host, options) {
     }
 
     if (args.length > 1) {
-      walker._throw(strictoptions.noStrictRequire, loc_text + 'Method `require` should not contains more than one parameters');
+      walker._throw(strict, loc_text + 'Method `require` should not contains more than one parameters');
     }
 
     var arg1 = args[0];
@@ -120,7 +128,7 @@ walker._parse_dependencies = function (node, host, options) {
 
 
 function pos_text (loc) {
-  return 'Line ' + loc.line + ': Column ' + loc.column ':';
+  return 'Line ' + loc.line + ': Column ' + loc.column + ': ';
 }
 
 
