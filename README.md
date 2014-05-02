@@ -41,6 +41,7 @@ Actually, there is no `walker.Module` exists. We only use it to declare and desc
 
 Property | Type | Description
 -------- | ---- | -----------
+id | `String` | the id of the module
 isEntryPoint | `Boolean` | whether the current module is the entry point
 dependents   | `Array.<walker.module>` | the dependent modules. If there's no dependents, it will be `[]`
 version | `semver` | the version of the current module.
@@ -51,7 +52,6 @@ isForeign | `Boolean` | whether the current module is from a foreign package.
 Property | Type | Description
 -------- | ---- | -----------
 code | `String` | the file content of the current module.
-path | `path` | the path of the module
 dependencies | `Array.<walker.Module>` | the dependencies of the current module. If the module has no dependencies, it will be `[]`
 unsolvedDependencies | `Array.<String>` | the array contains the items `require()`d by the module.
 
