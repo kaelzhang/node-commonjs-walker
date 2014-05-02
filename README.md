@@ -21,8 +21,9 @@ Walks down from a entry point, such as `package.main` of commonjs, and tries to 
 - entry `Path` the absolute path of the entry point.
 - options `Object={}`
 	- pkg `Object=` the object of package.json. by default, `walker` 
-	- noCheckDeps `Boolean=false`
-	- noCheckCircular `Boolean=false`
+	- noCheckDepVersion `Boolean=false` whether should check the version of foreign packages
+	- noCheckCircular `Boolean=false` whether should check circular dependencies
+	- noStrictRequire `Boolean=false` whether should check the usage of method `require()`
 - err `Error` the `walker.Error` object
 - module `walker.Module`
 
@@ -32,17 +33,11 @@ Walks down from a entry point, such as `package.main` of commonjs, and tries to 
 Actually, there is no `walker.Module` exists. We only use it to declare and describe the structure of the module.
 
 - isEntryPoint `Boolean` whether the current module is the entry point
-
 - dependencies `Array.<walker.Module>` the dependencies of the current module. If the module has no dependencies, it will be `[]`
-
 - arrayDependencies `Array.<String>` the array contains the items `require()`d by the module.
-
 - version `semver` the version of the current module.
-
 - code `String` the file content of the current module.
-
 - path `path` the path of the module
-
 - isForeign `Boolean` whether the current module is from a foreign package.
 
 
