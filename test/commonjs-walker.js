@@ -1,7 +1,7 @@
 'use strict';
 
 var expect = require('chai').expect;
-var parser = require('../parser');
+var parser = require('../lib/parser');
 var node_path = require('path');
 var util = require('util');
 
@@ -39,18 +39,15 @@ var cases = [
   }
 ];
 
-describe("parser.get_dependencies()", function(){
+describe("parser.parse()", function(){
   cases.forEach(function (c) {
     it(c.desc, function(done){
       var file = node_path.join(__dirname, 'fixtures', 'parser', c.file);
-      parser.get_dependencies(file, c.options || {}, function (err, dependencies) {
+      parser.parse(file, c.options || {}, function (err, result) {
         done();
         expect(!err).to.equal(!c.error); 
         if (util.isArray(c.deps)) {
-          expect(dependencies.sort()).to.deep.equal(c.deps.sort());
-
-        } else {
-          expect(dependencies).to.equal(c.deps);
+          expect(result.dependencies.sort()).to.deep.equal(c.deps.sort());
         }
       });
     });
