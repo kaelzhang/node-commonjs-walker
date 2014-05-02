@@ -1,6 +1,7 @@
 'use strict';
 
-var parser = require('./parser');
+var parser = require('./lib/parser');
+var circular = require('./lib/circular');
 var semver = require('semver');
 var node_path = require('path');
 var async = require('async');
@@ -64,19 +65,29 @@ Walker.prototype._get_node = function(path) {
 
 // If one of the ancestor dependents of `node` is `current`, it forms a circle.
 Walker.prototype._check_circular = function(current, node) {
-  var 
+  return circular.trace(current, node);
 };
 
 
-// @param {Array.}
-Walker.prototype._look_back = function(trace) {
-  // body...
+// 1. <path>
+// 2. <path>
+// 
+Walker.prototype._print_circular = function(trace) {
+  var list = trace.map(function (node, index) {
+    return index + 1 + ': ' + node.path;
+  });
+
+  list.pop();
+
+  var flow = trace.map(function (node, index) {
+    ++ index;
+
+    return index === 1 || index === trace.length
+      ? '[1]'
+      : index;
+
+  });
+
+  return list.join('\n') + '\n\n' + flow.join(' -> ');
 };
 
-
-Walker.prototype._print_circular = function() {
-  // body...
-};
-
-
-walker._single = 
