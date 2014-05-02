@@ -19,13 +19,17 @@ walker('/path/to/main.js', options, function(err, module){
 Walks down from a entry point, such as `package.main` of commonjs, and tries to create a `walker.Module` instance of the top level. 
 
 - entry `Path` the absolute path of the entry point.
-- options `Object={}`
-	- pkg `Object=` the object of package.json. by default, `walker` 
-	- noCheckDepVersion `Boolean=false` whether should check the version of foreign packages
-	- noCheckCircular `Boolean=false` whether should check circular dependencies
-	- noStrictRequire `Boolean=false` whether should check the usage of method `require()`
 - err `Error` the `walker.Error` object
 - module `walker.Module`
+
+#### options
+
+option | type | default | description
+------ | ---- | ------- | ------------
+pkg    | `Object` | undefined | the object of package.json. by default, `walker` 
+noCheckDepVersion | `Boolean` | false | whether should check the version of foreign packages
+noCheckCircular | `Boolean` | false | whether should check circular dependencies
+noStrictRequire | `Boolean` | false | whether should check the usage of method `require()`
 
 
 ## Struct: walker.Module
