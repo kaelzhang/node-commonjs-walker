@@ -8,10 +8,10 @@ var walker = require('commonjs-walker');
 
 **NOTICE** that it will not walk down `node_modules` and any foreign packages.
 
-## walker(entry, options, callback)
+## walker(entry, [options,] callback)
 
 ```js
-walker('/path/to/main.js', options, function(err, module){
+walker('/path/to/entry.js', options, function(err, tree){
 	// ...
 });
 ```
@@ -19,30 +19,36 @@ walker('/path/to/main.js', options, function(err, module){
 Walks down from a entry point, such as `package.main` of commonjs, and tries to create a `walker.Module` instance of the top level. 
 
 - entry `Path` the absolute path of the entry point.
-- err `Error` the `walker.Error` object
-- module `walker.Module`
+- tree `walker.Module` tree of `walker.Module`
 
 #### options
 
-option | type | default | description
+All options are optional. By default, `walker` works in a very strict mode.
+
+Option | Type | Default | Description
 ------ | ---- | ------- | ------------
-pkg    | `Object` | undefined | the object of package.json. by default, `walker` 
-noCheckDepVersion | `Boolean` | false | whether should check the version of foreign packages
+pkg    | `Object` | undefined | the object of package.json
+noCheckDepVersion | `Boolean` | false | whether should check the version of foreign packages. If `options.pkg` is not specified, walker will not check versions.
 noCheckCircular | `Boolean` | false | whether should check circular dependencies
 noStrictRequire | `Boolean` | false | whether should check the usage of method `require()`
+
+#### Example
 
 
 ## Struct: walker.Module
 
 Actually, there is no `walker.Module` exists. We only use it to declare and describe the structure of the module.
 
-- isEntryPoint `Boolean` whether the current module is the entry point
-- dependencies `Array.<walker.Module>` the dependencies of the current module. If the module has no dependencies, it will be `[]`
-- arrayDependencies `Array.<String>` the array contains the items `require()`d by the module.
-- version `semver` the version of the current module.
-- code `String` the file content of the current module.
-- path `path` the path of the module
-- isForeign `Boolean` whether the current module is from a foreign package.
+Property | Type | Description
+-------- | ---- | -----------
+isEntryPoint | `Boolean` | whether the current module is the entry point
+dependents   | `Array.<walker.module>` | the dependent modules
+dependencies | `Array.<walker.Module>` | the dependencies of the current module. If the module has no dependencies, it will be `[]`
+unsolvedDependencies | `Array.<String>` | the array contains the items `require()`d by the module.
+version | `semver` | the version of the current module.
+code | `String` | the file content of the current module.
+path | `path` | the path of the module
+isForeign | `Boolean` | whether the current module is from a foreign package.
 
 
 
