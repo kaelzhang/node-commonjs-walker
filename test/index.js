@@ -40,5 +40,12 @@ describe("walker()", function(){
       });
     });
   });
-});
 
+  it('let `options` be optional', function(done){
+      var file = node_path.join(root, cases[0].file);
+      walker(file,function(err, tree){
+        done();
+        cases[0].expect(err,tree);
+      });
+  });
+});
