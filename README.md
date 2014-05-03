@@ -90,12 +90,8 @@ All options are optional. By default, `walker` works in a very strict mode.
 
 Option | Type | Default | Description
 ------ | ---- | ------- | ------------
-pkg    | `Object` | undefined | the object of package.json
-noCheckCircular | `Boolean` | false | whether should check circular dependencies
-noStrictRequire | `Boolean` | false | whether should check the usage of method `require()`
-
-#### Example
-
+detectCircular | `Boolean` | true | whether should check circular dependencies
+strictRequire | `Boolean` | true | whether should check the usage of method `require()`
 
 ## Struct: walker.Module
 

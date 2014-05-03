@@ -17,10 +17,21 @@ function walker (entry, options, callback) {
 }
 
 
+function defaultTrue (object, key) {
+  var value = object[key];
+  object[key] = key in object
+    ? object[key]
+    : true
+}
+
+
 function Walker (entry, options, callback) {
   this.nodes = {};
   this.entry = node_path.resolve(entry);
   this.options = options;
+
+  defaultTrue(options, 'detectCircular');
+  defaultTrue(options, 'strictRequire');
 
   this.callback = callback;
   this._walk();
@@ -126,7 +137,7 @@ Walker.prototype._dealDependencies = function(data, callback) {
 
       // If one of the ancestor dependents of `node` is `current`, it forms a circle.
       var circular_trace = circular.trace(node, sub_node);
-      if (circular_trace && !options.noCheckCircular) {
+      if (circular_trace && options.detectCircular) {
         return done({
           code: 'ECIRCULAR',
           message: 'Circular dependency found: \n' + self._printCircular(circular_trace),
