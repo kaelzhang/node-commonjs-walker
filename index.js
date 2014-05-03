@@ -9,7 +9,10 @@ var async = require('async');
 
 function walker (entry, options, callback) {
   options || (options = {});
-
+  if(arguments.length == 2){
+    options = {};
+    callback = arguments[1];
+  }
   return new Walker(entry, options, callback);
 }
 
