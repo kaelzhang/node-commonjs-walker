@@ -20,11 +20,29 @@ var cases = [
   {
     desc: 'one dep',
     file: 'one-dep/index.js',
-    expect: function (err, tree) { console.log(err)
+    expect: function (err, tree) {
       expect(err).to.equal(null);
 
       var dep = tree.dependencies[0];
       expect(dep.id).to.equal( node_path.join(root, 'one-dep', 'a.js') );
+    }
+  },
+  {
+    desc: 'circular',
+    file: 'circular/index.js',
+    expect: function (err, tree) {
+      expect(err).not.to.equal(null);
+      expect(err.code).to.equal('ECIRCULAR');
+    }
+  },
+  {
+    desc: 'circular',
+    options: {
+      detectCircular: false
+    },
+    file: 'circular/index.js',
+    expect: function (err, tree) {
+      expect(err).to.equal(null);
     }
   }
 ];

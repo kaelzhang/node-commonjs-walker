@@ -238,7 +238,7 @@ Walker.prototype._getNode = function(path) {
 // 
 Walker.prototype._printCircular = function(trace) {
   var list = trace.map(function (node, index) {
-    return index + 1 + ': ' + node.path;
+    return index + 1 + ': ' + node.id;
   });
 
   list.pop();
