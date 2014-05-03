@@ -128,7 +128,6 @@ Walker.prototype._dealDependencies = function(data, callback) {
     }
 
     var sub_node = self._getNode(dep);
-
     if (sub_node) {
 
       // We only check the node if it meets the conditions below:
@@ -136,8 +135,13 @@ Walker.prototype._dealDependencies = function(data, callback) {
       // 2. but assigned as a dependency of anothor node
 
       // If one of the ancestor dependents of `node` is `current`, it forms a circle.
-      var circular_trace = circular.trace(node, sub_node);
-      if (circular_trace && options.detectCircular) {
+      var circular_trace;
+      if (
+        options.detectCircular 
+
+        // node -> sub_node
+        && (circular_trace = circular.trace(sub_node, node))
+      ) {
         return done({
           code: 'ECIRCULAR',
           message: 'Circular dependency found: \n' + self._printCircular(circular_trace),
