@@ -43,10 +43,10 @@ describe("circular.trace()", function(){
     };
     var b = {
       name: 'b',
-      dependents: [
+      dependencies: [
         {
           name: 'c',
-          dependents: [
+          dependencies: [
             {
               name: 'd'
             },
@@ -61,7 +61,7 @@ describe("circular.trace()", function(){
       ]
     };
 
-    var result = circular.trace(a, b).map(function (item) {
+    var result = circular.trace(b, a).map(function (item) {
       return item.name;
     });
     expect(result).to.deep.equal(['a', 'b', 'c', 'a']);
