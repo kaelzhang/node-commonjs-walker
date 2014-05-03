@@ -48,6 +48,8 @@ Walker.prototype._walk = function() {
       return;
     }
 
+    called = true;
+
     if (err) {
       return self.callback(err);
     }
