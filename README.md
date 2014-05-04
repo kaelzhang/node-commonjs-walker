@@ -110,7 +110,7 @@ Property | Type | Description
 -------- | ---- | -----------
 code | `Buffer` | the file content of the current module.
 dependencies | `Array.<walker.Module>` | the dependencies of the current module. If the module has no dependencies, it will be `[]`
-unsolvedDependencies | `Array.<String>` | the array contains the items `require()`d by the module.
+unresolvedDependencies | `Array.<String>` | the array contains the items `require()`d by the module.
 
 
 

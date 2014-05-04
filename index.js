@@ -116,7 +116,7 @@ Walker.prototype._dealDependencies = function(data, callback) {
   var path = data.path;
   var node = this._getNode(path);
 
-  node.unsolvedDependencies = dependencies;
+  node.unresolvedDependencies = dependencies;
   node.dependencies = [];
   node.code = data.code;
 
