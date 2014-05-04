@@ -52,7 +52,7 @@ Then, the `tree` object will be something like:
 	id: '/path/to/index.js',
 	dependents: [],
 	isEntryPoint: true,
-	unsolvedDependencies: ['./a'],
+	unresolvedDependencies: ['./a'],
 	dependencies: [
 		{
 			id: '/path/to/a.js',
@@ -60,7 +60,7 @@ Then, the `tree` object will be something like:
 				tree // points to `index.js`
 			],
 			dependencies: [],
-			unsolvedDependencies: [],
+			unresolvedDependencies: [],
 			code: <Buffer>
 		}
 	],
