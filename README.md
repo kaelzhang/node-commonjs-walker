@@ -90,7 +90,7 @@ All options are optional. By default, `walker` works in a very strict mode.
 
 Option | Type | Default | Description
 ------ | ---- | ------- | ------------
-detectCircular | `Boolean` | true | whether should check circular dependencies
+detectCyclic | `Boolean` | true | whether should check cyclic dependencies
 strictRequire | `Boolean` | true | whether should check the usage of method `require()`
 
 ## Struct: walker.Module

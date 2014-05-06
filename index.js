@@ -30,7 +30,7 @@ function Walker (entry, options, callback) {
   this.entry = node_path.resolve(entry);
   this.options = options;
 
-  defaultTrue(options, 'detectCircular');
+  defaultTrue(options, 'detectCyclic');
   defaultTrue(options, 'strictRequire');
 
   this.callback = callback;
@@ -139,14 +139,14 @@ Walker.prototype._dealDependencies = function(data, callback) {
       // If one of the ancestor dependents of `node` is `current`, it forms a circle.
       var circular_trace;
       if (
-        options.detectCircular 
+        options.detectCyclic 
 
         // node -> sub_node
         && (circular_trace = circular.trace(sub_node, node))
       ) {
         return done({
           code: 'ECIRCULAR',
-          message: 'Circular dependency found: \n' + self._printCircular(circular_trace),
+          message: 'Cyclic dependency found: \n' + self._printCyclic(circular_trace),
           data: {
             trace: circular_trace,
             path: dep
@@ -236,7 +236,7 @@ Walker.prototype._getNode = function(path) {
 // 1. <path>
 // 2. <path>
 // 
-Walker.prototype._printCircular = function(trace) {
+Walker.prototype._printCyclic = function(trace) {
   var list = trace.map(function (node, index) {
     return index + 1 + ': ' + node.id;
   });

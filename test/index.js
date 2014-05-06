@@ -38,7 +38,7 @@ var cases = [
   {
     desc: 'circular',
     options: {
-      detectCircular: false
+      detectCyclic: false
     },
     file: 'circular/index.js',
     expect: function (err, tree) {
