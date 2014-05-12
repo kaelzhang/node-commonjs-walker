@@ -32,7 +32,7 @@ var cases = [
     file: 'circular/index.js',
     expect: function (err, tree) {
       expect(err).not.to.equal(null);
-      expect(err.code).to.equal('ECIRCULAR');
+      expect(err.code).to.equal('CYCLIC_DEPENDENCY');
     }
   },
   {
