@@ -124,7 +124,7 @@ Walker.prototype._walk = function() {
 
 Walker.prototype._parseJsonFile = function(path, callback) {
   var self = this;
-  parser._read(path, function (err, content) {
+  parser.read(path, function (err, content) {
     if (err) {
       return callback(err);
     }
