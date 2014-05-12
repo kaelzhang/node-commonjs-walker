@@ -21,25 +21,26 @@ walker('/path/to/entry.js', options, function(err, tree, nodes){
 });
 ```
 
-If the file structure of your project is:
+If the file structure of your project is (actually it is a very extreme scenario):
 
 ```
 /path/to
        |-- index.js
        |-- a
-       	   |-- index.json
+       |   |-- index.json      	
 ```
 
 index.js:
 
 ```js
 require('./a');
+require('b');
 ```
 
-a.js:
+a/index.json
 
-```js
-// there's nothing.
+```json
+{}
 ```
 
 Code:
@@ -58,7 +59,7 @@ Then, the `tree` object will be something like:
 	id: '/path/to/index.js',
 	dependents: [],
 	isEntryPoint: true,
-	unresolvedDependencies: ['./a'],
+	unresolvedDependencies: ['./a', './b'],
 	dependencies: [
 		{
 			// use `require.resolve` to the the real path.
@@ -68,7 +69,13 @@ Then, the `tree` object will be something like:
 			],
 			dependencies: [],
 			unresolvedDependencies: [],
-			code: <Buffer>
+			code: <Buffer>,
+			isJson: true
+		},
+		{
+		    id: 'b',
+		    isForeign: true,
+		    dependents: [tree]
 		}
 	],
 	code: <Buffer>
@@ -120,6 +127,8 @@ Especially, only tree values are allowed below:
 
 Actually, there is no `walker.Module` exists. We only use it to declare and describe the structure of the module.
 
+#### For All types
+
 Property | Type | Description
 -------- | ---- | -----------
 id | `String` | the id of the module
@@ -127,15 +136,17 @@ isEntryPoint | `Boolean` | whether the current module is the entry point
 dependents   | `Array.<walker.module>` | the dependent modules. If there's no dependents, it will be `[]`
 isForeign | `Boolean` | whether the current module is from a foreign package.
 
-** Properties only if `isForeign` is false: **
+#### `isJSON` or normal
 
 Property | Type | Description
 -------- | ---- | -----------
 code | `Buffer` | the file content of the current module.
+
+#### For both `isForeign` and `isJSON` are `false`
+Property | Type | Description
+-------- | ---- | -----------
 dependencies | `Array.<walker.Module>` | the dependencies of the current module. If the module has no dependencies, it will be `[]`
 unresolvedDependencies | `Array.<String>` | the array contains the items `require()`d by the module.
-
-
 
 
 ## Class: walker.Error
