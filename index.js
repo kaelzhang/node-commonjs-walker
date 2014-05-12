@@ -84,20 +84,28 @@ Walker.prototype._walk = function() {
 
   var err;
   var q = async.queue(function (task, done) {
+    var path = task.path;
+
+    function sub_node (err) {
+      if (err) {
+        cb(err);
+      }
+
+      done();
+    }
+
+    if (/\.json$/i.test(path)) {
+      return self._parseJsonFile(path, sub_node);
+    }
+
     // Each node must be created before `._parseFile()`
-    self._parseFile(task.path, function (err, data) {
+    self._parseFile(path, function (err, data) {
       if (err) {
         cb(err);
         return done();
       }
 
-      self._dealDependencies(data, function (err) {
-        if (err) {
-          cb(err);
-        }
-
-        done();
-      });
+      self._dealDependencies(data, sub_node);
     });
   });
 
@@ -111,6 +119,20 @@ Walker.prototype._walk = function() {
   });
 
   this.queue = q;
+};
+
+
+Walker.prototype._parseJsonFile = function(path, callback) {
+  var self = this;
+  parser._read(path, function (err, content) {
+    if (err) {
+      return callback(err);
+    }
+
+    var node = this._getNode(path);
+    node.code = content;
+    node.isJson = true;
+  });
 };
 
 
@@ -252,7 +274,7 @@ Walker.prototype._cleanResolvedDependency = function(resolved) {
     return resolved;
   }
 
-  var ext = match[0];
+  var ext = match[0].toLowerCase();
   if (~this.options.extFallbacks.indexOf(ext)) {
     return resolved;
   }
