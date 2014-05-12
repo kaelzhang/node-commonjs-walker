@@ -8,6 +8,11 @@ var walker = require('commonjs-walker');
 
 **NOTICE** that it will not walk down `node_modules` and any foreign packages.
 
+## Supports:
+
+- `require()` a directory.
+- if a module is not find, commonjs-walker will attempt to load the required filename with the added extension of `.js`, `.json`, and then `.node`, according to [File Modules](http://nodejs.org/api/modules.html#modules_file_modules)
+
 ## walker(entry, [options,] callback)
 
 ```js
@@ -20,8 +25,9 @@ If the file structure of your project is:
 
 ```
 /path/to
-       |--- index.js
-       |--- a.js
+       |-- index.js
+       |-- a
+       	   |-- index.json
 ```
 
 index.js:
@@ -55,7 +61,8 @@ Then, the `tree` object will be something like:
 	unresolvedDependencies: ['./a'],
 	dependencies: [
 		{
-			id: '/path/to/a.js',
+			// use `require.resolve` to the the real path.
+			id: '/path/to/a/index.json',
 			dependents: [
 				tree // points to `index.js`
 			],
@@ -92,6 +99,22 @@ Option | Type | Default | Description
 ------ | ---- | ------- | ------------
 detectCyclic | `Boolean` | true | whether should check cyclic dependencies
 strictRequire | `Boolean` | true | whether should check the usage of method `require()`
+allowAbsolutePath | `Boolean` | true | whether should allow to require an absolute path.
+extFallbacks | `Array` | `['.js', '.json', '.node']` | see `options.extFallbacks` section
+
+#### options.extFallbacks
+
+type `Array`
+
+When we `require()` a `path`, if `path` is not found, nodejs will attempt to load the required filename with the added extension of `.js`, `.json`, and then `.node`. [ref](http://nodejs.org/api/modules.html#modules_file_modules)
+
+But for browser-side environment, most usually, we do not support extension `.node` which is why `options.extFallbacks`.
+
+Especially, only tree values are allowed below:
+
+- `['.js']`
+- `['.js', '.json']`,
+- `['.js', '.json', '.node']`
 
 ## Struct: walker.Module
 
@@ -125,6 +148,10 @@ unresolvedDependencies | `Array.<String>` | the array contains the items `requir
 
 ## Error codes
 
+##### NOT_ALLOW_ABSOLUTE_PATH
 
+##### MODULE_NOT_FOUND
+
+##### CYCLIC_DEPENDENCY
 
 
