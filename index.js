@@ -258,8 +258,11 @@ Walker.prototype._resolveDependency = function(dep) {
     resolved = require.resolve(dep);
   } catch(e) {}
 
-  resolved = this._cleanResolvedDependency(resolved);
-
+  // If require.resolve throws, resolved will be `null`
+  if (resolved) {
+    resolved = this._cleanResolvedDependency(resolved);
+  }
+  
   return resolved;
 };
 
