@@ -84,8 +84,6 @@ Walker.prototype._walk = function() {
 
   var err;
   var q = async.queue(function (task, done) {
-    var path = task.path;
-
     function sub_node (err) {
       if (err) {
         cb(err);
@@ -94,8 +92,17 @@ Walker.prototype._walk = function() {
       done();
     }
 
-    if (/\.json$/i.test(path)) {
+    var path = task.path;
+    var ext = self._getExt(path);
+    var node = self._getNode(path);
+    node.ext = ext;
+
+    if (ext === '.json') {
       return self._parseJsonFile(path, sub_node);
+    }
+
+    if (ext === '.node') {
+      return self._parseNodeFile(path, sub_node);
     }
 
     // Each node must be created before `._parseFile()`
@@ -122,6 +129,23 @@ Walker.prototype._walk = function() {
 };
 
 
+var REGEX_MATCH_EXT = /\.[a-z]+$/i;
+Walker.prototype._getExt = function(file) {
+  var match = file.match(REGEX_MATCH_EXT);
+  if (!match) {
+    return '';
+  }
+
+  return match[0].toLowerCase();
+};
+
+
+// Actually, we do nothing
+Walker.prototype._parseNodeFile = function(path, callback) {
+  this._parseJsonFile(path, callback);
+};
+
+
 Walker.prototype._parseJsonFile = function(path, callback) {
   var self = this;
   parser.read(path, function (err, content) {
@@ -129,9 +153,11 @@ Walker.prototype._parseJsonFile = function(path, callback) {
       return callback(err);
     }
 
-    var node = this._getNode(path);
+    var node = self._getNode(path);
     node.code = content;
-    node.isJson = true;
+    node.dependencies = [];
+    node.unresolvedDependencies = [];
+    callback(null);
   });
 };
 
@@ -143,17 +169,6 @@ Walker.prototype._parseFile = function(path, callback) {
     noStrictRequire: this.options.noStrictRequire
 
   }, callback);
-};
-
-
-Walker.prototype._ensureExt = function(path, ext) {
-  var regex = new RegExp('\\.' + ext + '$', 'i');
-
-  if (!regex.test(path)) {
-    path += '.' + ext;
-  }
-
-  return path;
 };
 
 
@@ -271,13 +286,12 @@ Walker.prototype._resolveDependency = function(dep) {
 // `.js`, then `.json`, and finally `.node`.
 // But we not always do that, so we need to clean the resolved path.
 Walker.prototype._cleanResolvedDependency = function(resolved) {
-  var match = resolved.match(/\.[a-z]+$/i);
+  var ext = this._getExt(resolved);
   // if no extension, the module must exist.
-  if (!match) {
+  if (!ext) {
     return resolved;
   }
 
-  var ext = match[0].toLowerCase();
   if (~this.options.extFallbacks.indexOf(ext)) {
     return resolved;
   }
