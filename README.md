@@ -64,6 +64,7 @@ Then, the `tree` object will be something like:
 		{
 			// use `require.resolve` to the the real path.
 			id: '/path/to/a/index.json',
+      ext: '.json',
 			dependents: [
 				tree // points to `index.js`
 			],
@@ -132,19 +133,16 @@ Actually, there is no `walker.Module` exists. We only use it to declare and desc
 Property | Type | Description
 -------- | ---- | -----------
 id | `String` | the id of the module
+ext | `String` | the extension of the file
 isEntryPoint | `Boolean` | whether the current module is the entry point
 dependents   | `Array.<walker.module>` | the dependent modules. If there's no dependents, it will be `[]`
 isForeign | `Boolean` | whether the current module is from a foreign package.
 
-#### `isJSON` or normal
+#### If `isForeign` is `false`
 
 Property | Type | Description
 -------- | ---- | -----------
 code | `Buffer` | the file content of the current module.
-
-#### For both `isForeign` and `isJSON` are `false`
-Property | Type | Description
--------- | ---- | -----------
 dependencies | `Array.<walker.Module>` | the dependencies of the current module. If the module has no dependencies, it will be `[]`
 unresolvedDependencies | `Array.<String>` | the array contains the items `require()`d by the module.
 
