@@ -44,6 +44,47 @@ var cases = [
     expect: function (err, tree) {
       expect(err).to.equal(null);
     }
+  },
+  {
+    desc: 'module not found',
+    options: {
+      // extFallbacks: ['.js', '.json', '.node'],
+      // allowAbsolutePath: false
+    },
+    file: 'not-found/one.js',
+    expect: function (err, tree) {
+      expect(err.code).to.equal('MODULE_NOT_FOUND');
+    }
+  },
+  {
+    desc: 'module not found: fallback, still not found',
+    options: {},
+    file: 'not-found/two.js',
+    expect: function (err, tree) {
+      expect(err.code).to.equal('MODULE_NOT_FOUND');
+    }
+  },
+  {
+    desc: 'module not found: limited by exts',
+    options: {
+      extFallbacks: ['.js', '.json']
+    },
+    file: 'not-found/three.js',
+    expect: function (err) {
+      expect(err.code).to.equal('MODULE_NOT_FOUND');
+    }
+  },
+  {
+    desc: 'if not limited, could be found',
+    options: {
+      // extFallbacks: ['.js', '.json']
+    },
+    file: 'not-found/three.js',
+    expect: function (err, tree) {
+      expect(err).to.equal(null);
+      var file = node_path.join(root, 'not-found', 'dep3.node');
+      expect(tree.dependencies[0].id).to.equal(file);
+    }
   }
 ];
 
