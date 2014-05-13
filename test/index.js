@@ -85,7 +85,14 @@ var cases = [
       var file = node_path.join(root, 'not-found', 'dep3.node');
       expect(tree.dependencies[0].id).to.equal(file);
     }
-  }
+  },
+  // {
+  //   desc: 'modules and directories',
+  //   options: {
+
+  //   },
+  //   file: 'not'
+  // }
 ];
 
 

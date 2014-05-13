@@ -184,6 +184,10 @@ Walker.prototype._dealDependencies = function(data, callback) {
   var self = this;
   var options = this.options;
   async.each(dependencies, function (dep, done) {
+    // Suppose:
+    // origin -> 
+    // './a'
+    // './b.js'
     var origin = dep;
 
     if (dep.indexOf('/') === 0 && !options.allowAbsolutePath) {
@@ -198,10 +202,14 @@ Walker.prototype._dealDependencies = function(data, callback) {
     }
 
     // Absolutize
+    // -> '/path/to/a'
+    // -> '/path/to/b.js'
     if (self._isRelativePath(dep)) {
       dep = node_path.join(node_path.dirname(path), dep);
     }
 
+    // -> '/path/to/a.js'
+    // -> '/path/to/b.js'
     var resolved = self._resolveDependency(dep);
     if (!resolved) {
       return done({
