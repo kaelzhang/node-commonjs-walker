@@ -64,14 +64,13 @@ Then, the `tree` object will be something like:
 		{
 			// use `require.resolve` to the the real path.
 			id: '/path/to/a/index.json',
-      ext: '.json',
+      		ext: '.json',
 			dependents: [
 				tree // points to `index.js`
 			],
 			dependencies: [],
 			unresolvedDependencies: [],
-			code: <Buffer>,
-			isJson: true
+			code: <Buffer>
 		},
 		{
 		    id: 'b',
