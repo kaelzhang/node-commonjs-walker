@@ -166,7 +166,7 @@ Walker.prototype._parseFile = function(path, callback) {
   var self = this;
 
   parser.parse(path, {
-    noStrictRequire: this.options.noStrictRequire
+    strictRequire: this.options.strictRequire
 
   }, callback);
 };
