@@ -13,16 +13,16 @@ var cases = [
       strictRequire: true
     },
     deps: ['../abc', 'abc', './abc']
-
-  }, {
+  }, 
+  {
     desc: 'no arguments, strict',
     file: 'no-arg.js',
     options: {
       strictRequire: true
     },
     error: true
-
-  }, {
+  }, 
+  {
     desc: 'no arguments, no strict',
     file: 'no-arg.js',
     options: {
@@ -30,7 +30,8 @@ var cases = [
     },
     deps: ['abc']
   
-  }, {
+  }, 
+  {
     desc: 'more than one arguments, strict',
     file: 'more-than-one-arg.js',
     options: {
@@ -38,7 +39,8 @@ var cases = [
     },
     error: true
 
-  }, {
+  }, 
+  {
     desc: 'more than one arguments, no strict',
     file: 'more-than-one-arg.js',
     options: {

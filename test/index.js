@@ -92,7 +92,18 @@ var cases = [
 
   //   },
   //   file: 'not'
-  // }
+  // },
+  {
+    desc: 'error require',
+    options: {
+
+    },
+    file: 'error-require/a.js',
+    expect: function (err, tree) {
+      expect(err).to.not.equal(null);
+      expect(err.code).to.equal('EREQUIRE');
+    }
+  }
 ];
 
 
