@@ -82,23 +82,107 @@ var cases = [
     }
   },
   {
-    desc: 'modules and directories',
-    options: {
-
-    },
-    file: 'not'
-  },
-  {
     desc: 'error require',
-    options: {
-
-    },
     file: 'error-require/a.js',
     expect: function (err, path, nodes, entry) {
       expect(err).to.not.equal(null);
       expect(err.code).to.equal('WRONG_USAGE_REQUIRE');
     }
-  }
+  },
+  {
+    desc: 'modules: no-fallback',
+    file: 'fallback/no-fallback.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
+      var dep = './cases/no-fallback';
+      var real = node_path.join( node_path.dirname(path), dep );
+      expect(entry.dependencies[dep]).to.equal(real);
+    }
+  },
+  {
+    desc: 'modules: no-fallback not found',
+    file: 'fallback/no-fallback-not-found.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err.code).to.equal('MODULE_NOT_FOUND');
+    }
+  },
+  {
+    desc: 'modules: fallback',
+    file: 'fallback/fallback.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
+      var dep = './cases/fallback';
+      var real = node_path.join( node_path.dirname(path), dep ) + '.js';
+      expect(entry.dependencies[dep]).to.equal(real);
+    }
+  },
+  {
+    desc: 'modules: exact, no fallback',
+    file: 'fallback/fallback-exact.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
+      var dep = './cases/fallback.js';
+      var real = node_path.join( node_path.dirname(path), dep );
+      expect(entry.dependencies[dep]).to.equal(real);
+    }
+  },
+  {
+    desc: 'modules: falback to json',
+    file: 'fallback/fallback-json.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
+      var dep = './cases/fallback-json';
+      var real = node_path.join( node_path.dirname(path), dep ) + '.json';
+      expect(entry.dependencies[dep]).to.equal(real);
+    }
+  },
+  {
+    desc: 'modules: falback to node',
+    options: {
+    },
+    file: 'fallback/fallback-node.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
+      var dep = './cases/fallback-node';
+      var real = node_path.join( node_path.dirname(path), dep ) + '.node';
+      expect(entry.dependencies[dep]).to.equal(real);
+    }
+  },
+  {
+    desc: 'modules: falback to node, without `".node"` extension',
+    options: {
+      extensions: ['.js', '.json']
+    },
+    file: 'fallback/fallback-node.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err.code).to.equal('MODULE_NOT_FOUND');
+    }
+  },
+
+  {
+    desc: 'directories: dir without ending slash',
+    options: {
+    },
+    file: 'fallback/dir.js',
+    expect: function (err, path, nodes, entry) { console.log(err)
+      expect(err).to.equal(null);
+      var dep = './cases/dir';
+      var real = node_path.join( node_path.dirname(path), dep ) + '/index.js';
+      expect(entry.dependencies[dep]).to.equal(real);
+    }
+  },
+  {
+    desc: 'directories: dir with ending slash',
+    options: {
+    },
+    file: 'fallback/dir-slash.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
+      var dep = './cases/dir/';
+      var real = node_path.join( node_path.dirname(path), dep ) + 'index.js';
+      expect(entry.dependencies[dep]).to.equal(real);
+    }
+  },
 ];
 
 
@@ -110,13 +194,19 @@ describe("walker()", function(){
 
     function run (noOptions) {
       var desc = c.desc;
+      var options = c.options || {};
+
       if (noOptions) {
+        if (Object.keys(options).length !== 0) {
+          return;
+        }
+
         desc += ': no argument `options`';
       }
 
       i(desc, function(done){
         var file = node_path.join(root, c.file);
-        var options = c.options || {};
+        
         var callback = function (err, nodes) {
           done();
           var entry;
@@ -127,10 +217,6 @@ describe("walker()", function(){
         };
 
         if (noOptions) {
-          if (Object.keys(options) !== 0) {
-            done();
-            return;
-          }
           walker(file, callback);
         } else {
           walker(file, options, callback);
