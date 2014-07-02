@@ -16,7 +16,7 @@ var walker = require('commonjs-walker');
 ## walker(entry, [options,] callback)
 
 ```js
-walker('/path/to/entry.js', options, function(err, tree, nodes){
+walker('/path/to/entry.js', options, function(err, nodes){
 	// ...
 });
 ```
@@ -52,42 +52,32 @@ walker('/path/to/index.js', function(err, tree, nodes){
 })
 ```
 
-Then, the `tree` object will be something like:
+Then, the `nodes` object will be something like:
 
 ```js
 {
-	id: '/path/to/index.js',
-	dependents: [],
-	isEntryPoint: true,
-	unresolvedDependencies: ['./a', './b'],
-	dependencies: [
-		{
-			// use `require.resolve` to the the real path.
-			id: '/path/to/a/index.json',
-      		ext: '.json',
-			dependents: [
-				tree // points to `index.js`
-			],
-			dependencies: [],
-			unresolvedDependencies: [],
-			code: <Buffer>
-		},
-		{
-		    id: 'b',
-		    isForeign: true,
-		    dependents: [tree]
-		}
-	],
-	code: <Buffer>
-}
-```
-
-The `nodes` object is the `path->node` hashmap.
-
-```js
-{
-	'/path/to/index.js': tree,
-	'/path/to/a.js': tree.dependencies[0]
+	'/path/to/index.js': {
+    dependents: [],
+    entry: true,
+    dependencies: {
+      './a': '/path/to/a/index.json',
+      'b': 'b'
+    },
+    code: <Buffer>
+  },
+  '/path/to/a/index.json': {
+    dependents: [
+      '/path/to/index.js'
+    ],
+    dependencies: {},
+    code: <Buffer>
+  },
+  'b': {
+    foreign: true,
+    dependents: [
+      '/path/to/index.js'
+    ]
+  }
 }
 ```
 
@@ -95,7 +85,6 @@ The `nodes` object is the `path->node` hashmap.
 Walks down from a entry point, such as `package.main` of commonjs, and tries to create a `walker.Module` instance of the top level. 
 
 - entry `Path` the absolute path of the entry point.
-- tree `walker.Module` tree of `walker.Module`
 - nodes `Object` the hashmap of `<path>: <walker.Module>`
 
 #### options
