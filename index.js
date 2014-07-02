@@ -8,7 +8,7 @@ var node_path = require('path');
 var async = require('async');
 var fs = require('fs');
 var util = require('util');
-var mod = require('./lib/module');
+var resolve = require('resolve');
 
 function walker (entry, options, callback) {
   options || (options = {});
@@ -24,7 +24,7 @@ walker.OPTIONS = {
     detectCyclic: true,
     strictRequire: true,
     allowAbsolutePath: false,
-    extFallbacks: ['.js', '.json'],
+    extensions: ['.js', '.json'],
     parseForeignModule: false
   }
 };
@@ -49,10 +49,10 @@ function Walker (entry, options, callback) {
   makeDefault(options, 'strictRequire', true);
   makeDefault(options, 'allowAbsolutePath', true);
   makeDefault(options, 'parseForeignModule', true);
-  makeDefault(options, 'extFallbacks', EXTS_NODE);
+  makeDefault(options, 'extensions', EXTS_NODE);
 
   if (!this._checkExts()) {
-    throw new Error('Invalid value of `options.extFallbacks`');
+    throw new Error('Invalid value of `options.extensions`');
   }
 
   this.callback = callback;
@@ -60,9 +60,9 @@ function Walker (entry, options, callback) {
 }
 
 
-// Checks if the `options.extFallbacks` is valid
+// Checks if the `options.extensions` is valid
 Walker.prototype._checkExts = function() {
-  var exts = this.options.extFallbacks;
+  var exts = this.options.extensions;
 
   if (!util.isArray(exts)) {
     return false;
@@ -106,6 +106,7 @@ Walker.prototype._walk = function() {
   });
 
   // Creates entry node
+  // `node` should be created before the task is running.
   this._createNode(entry);
   q.drain = cb;
   // Adds initial task
@@ -141,171 +142,110 @@ Walker.prototype._parseJsonFile = function(path, callback) {
 Walker.prototype._parseFileDependencies = function(path, callback) {
   var self = this;
 
-  var path = task.path;
+  
     mod(path, function (real) {
       if (!real) {
-        return sub_done({
-          code: 'MODULE_NOT_FOUND',
-          message: "Cannot find module '" + path + "'",
+        return sub_done();
+      }
+
+  var node = this._getNode(path);
+  var path = task.path;
+  var options = this.options;
+  var self = this;
+  parser.parse(path, {
+    strictRequire: this.options.strictRequire
+
+  // @param {Object} data
+  // - code
+  // - path
+  // - dependencies
+  }, function (err, data) {
+    node.code = data.code;
+    node.dependencies = {};
+
+    var dependencies = data.dependencies;
+    async.each(dependencies, function (dep, done) {
+      if (dep.indexOf('/') === 0 && !options.allowAbsolutePath) {
+        return done({
+          code: 'NOT_ALLOW_ABSOLUTE_PATH',
+          message: 'Requiring an absolute path "' + dep + '" is not allowed in "' + path + '"',
           data: {
+            dependency: dep,
             path: path
           }
         });
       }
 
-      
-
-  parser.parse(path, {
-    strictRequire: this.options.strictRequire
-
-  }, callback);
+      resolve(dep, {
+        basedir: 
+        extensions
+      }, function (real) {
+        
+      });
+    }, callback);
+  });
 };
 
 
-Walker.prototype._dealDependencies = function(data, callback) {
-  var dependencies = data.dependencies;
-  var path = data.path;
-  var node = this._getNode(path);
 
-  node.unresolvedDependencies = dependencies;
-  node.dependencies = [];
-  node.code = data.code;
-
-  var self = this;
-  var options = this.options;
-  async.each(dependencies, function (dep, done) {
-    // Suppose:
-    // origin -> 
-    // './a'
-    // './b.js'
-    var origin = dep;
-
-    if (dep.indexOf('/') === 0 && !options.allowAbsolutePath) {
-      return done({
-        code: 'NOT_ALLOW_ABSOLUTE_PATH',
-        message: 'Requiring an absolute path is not allowed',
-        data: {
-          dependency: dep,
-          path: path
-        }
-      });
-    }
-
-    // Absolutize
-    // -> '/path/to/a'
-    // -> '/path/to/b.js'
-    if (self._isRelativePath(dep)) {
-      dep = node_path.join(node_path.dirname(path), dep);
-    }
-
-    // -> '/path/to/a.js'
-    // -> '/path/to/b.js'
-    var resolved = self._resolveDependency(dep);
-    if (!resolved) {
-      return done({
-        code: 'MODULE_NOT_FOUND',
-        message: 'Cannot find module \'' + origin + '\'',
-        data: {
-          path: dep,
-          origin: origin
-        }
-      });
-    }
-
-    var sub_node = self._getNode(resolved);
-    if (sub_node) {
-      // We only check the node if it meets the conditions below:
-      // 1. already exists: all new nodes are innocent.
-      // 2. but assigned as a dependency of anothor node
-
-      // If one of the ancestor dependents of `node` is `current`, it forms a circle.
-      var circular_trace;
-      if (
-        options.detectCyclic 
-
-        // node -> sub_node
-        && (circular_trace = circular.trace(sub_node, node))
-      ) {
-        return done({
-          code: 'CYCLIC_DEPENDENCY',
-          message: 'Cyclic dependency found: \n' + self._printCyclic(circular_trace),
-          data: {
-            trace: circular_trace,
-            path: resolved
-          }
-        });
+Walker.prototype._dealDependency = function(first_argument) {
+  if (!real) {
+    return done({
+      code: 'MODULE_NOT_FOUND',
+      message: 'Cannot find module "' + path + '".',
+      data: {
+        path: path
       }
-
-      self._addDependent(node, sub_node);
-
-      // If sub node is already exists, skip parsing.
-      return done(null);
-    }
-
-    sub_node = self._createNode(resolved);
-    self._addDependent(node, sub_node);
-
-    if (sub_node.isForeign) {
-      // We do NOT parse foreign modules
-      return done(null);
-    }
-    
-    self.queue.push({
-      path: resolved
     });
+  }
 
-    done(null);
+  node.dependencies[dep] = real;
+  var sub_node = self._getNode(real);
+  if (!sub_node) {
+    sub_node = self._createNode(real);
+    if (!sub_node.foreign || options.parseForeignModule) {
+      // only if the node is newly created.
+      self.queue.push({
+        path: real
+      });
+    }
+    self._addDependent(node, sub_node);
+    return done(null);
+  }
 
-  }, callback);
+
+  // We only check the node if it meets the conditions below:
+  // 1. already exists: all new nodes are innocent.
+  // 2. but assigned as a dependency of anothor node
+
+  // If one of the ancestor dependents of `node` is `current`, it forms a circle.
+  var circular_trace;
+  if (
+    options.detectCyclic 
+
+    // node -> sub_node
+    && (circular_trace = circular.trace(sub_node, node))
+  ) {
+    return done({
+      code: 'CYCLIC_DEPENDENCY',
+      message: 'Cyclic dependency found: \n' + self._printCyclic(circular_trace),
+      data: {
+        trace: circular_trace,
+        path: real
+      }
+    });
+  }
+
+  self._addDependent(node, sub_node);
+  done(null);
 };
-
-
-// Walker.prototype._resolveDependency = function(dep) {
-//   // Foreign module with a top id
-//   if (!this._isAbsolutePath(dep)) {
-//     return dep;
-//   }
-
-//   var resolved = null;
-//   try {
-//     resolved = require.resolve(dep);
-//   } catch(e) {}
-
-//   // If require.resolve throws, resolved will be `null`
-//   if (resolved) {
-//     resolved = this._cleanResolvedDependency(resolved);
-//   }
-  
-//   return resolved;
-// };
-
-
-// // `require.resolve` will always fallback to 
-// // `.js`, then `.json`, and finally `.node`.
-// // But we not always do that, so we need to clean the resolved path.
-// Walker.prototype._cleanResolvedDependency = function(resolved) {
-//   var ext = this._getExt(resolved);
-//   // if no extension, the module must exist.
-//   if (!ext) {
-//     return resolved;
-//   }
-
-//   if (~this.options.extFallbacks.indexOf(ext)) {
-//     return resolved;
-//   }
-
-//   // if `options.extFallbacks` does not contain `ext`,
-//   // we consider it not found.
-//   return null;
-// };
 
 
 Walker.prototype._addDependent = function(dependent, dependency) {
-  if (!~dependency.dependents.indexOf(dependent)) {
-    dependency.dependents.push(dependent);
+  // adds dependent
+  if (!~sub_node.dependents.indexOf(node)) {
+    sub_node.dependents.push(node);
   }
-
-  dependent.dependencies.push(dependency);
 };
 
 
