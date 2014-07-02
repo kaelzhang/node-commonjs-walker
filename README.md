@@ -56,7 +56,7 @@ Then, the `nodes` object will be something like:
 
 ```js
 {
-	'/path/to/index.js': {
+  '/path/to/index.js': {
     dependents: [],
     entry: true,
     dependencies: {
