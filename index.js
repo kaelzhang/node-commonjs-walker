@@ -24,8 +24,7 @@ walker.OPTIONS = {
     detectCyclic: true,
     strictRequire: true,
     allowAbsolutePath: false,
-    extensions: ['.js', '.json'],
-    parseForeignModule: false
+    extensions: ['.js', '.json']
   }
 };
 
@@ -48,7 +47,6 @@ function Walker (entry, options, callback) {
   makeDefault(options, 'detectCyclic', true);
   makeDefault(options, 'strictRequire', true);
   makeDefault(options, 'allowAbsolutePath', true);
-  makeDefault(options, 'parseForeignModule', true);
   makeDefault(options, 'extensions', EXTS_NODE);
 
   if (!this._checkExts()) {
@@ -176,6 +174,10 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
         });
       }
 
+      if (!self._isForeign(dep)) {
+        return self._dealDependency(dep, dep, node, done);
+      }
+
       resolve(dep, {
         basedir: 
         extensions
@@ -188,7 +190,7 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
 
 
 
-Walker.prototype._dealDependency = function(first_argument) {
+Walker.prototype._dealDependency = function(dep, real, node, callback) {
   if (!real) {
     return done({
       code: 'MODULE_NOT_FOUND',
@@ -203,7 +205,7 @@ Walker.prototype._dealDependency = function(first_argument) {
   var sub_node = self._getNode(real);
   if (!sub_node) {
     sub_node = self._createNode(real);
-    if (!sub_node.foreign || options.parseForeignModule) {
+    if (!sub_node.foreign) {
       // only if the node is newly created.
       self.queue.push({
         path: real
@@ -261,23 +263,20 @@ Walker.prototype._createNode = function(id) {
     node = this.nodes[id] = {
       dependents: [],
       entry: id === this.entry,
-      foreign: !this._isAbsolutePath(id)
+      foreign: this._isForeign(id)
     };
   }
   return node;
 };
 
 
-Walker.prototype._isAbsolutePath = function(path) {
-  return node_path.resolve(path) === path.replace(/[\/\\]+$/, '');
+Walker.prototype._isForeign = function(path) {
+  return !this._isAbsolutePath(path);
 };
 
 
-Walker.prototype._isRelativePath = function(dep) {
-  // 'abc' -> true
-  // './abc' -> false
-  // '../abc' -> false
-  return dep.indexOf('./') === 0 || dep.indexOf('../') === 0;
+Walker.prototype._isAbsolutePath = function(path) {
+  return node_path.resolve(path) === path.replace(/[\/\\]+$/, '');
 };
 
 
