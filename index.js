@@ -8,6 +8,7 @@ var node_path = require('path');
 var async = require('async');
 var fs = require('fs');
 var util = require('util');
+var mod = require('./lib/module');
 
 function walker (entry, options, callback) {
   options || (options = {});
@@ -17,6 +18,16 @@ function walker (entry, options, callback) {
   }
   return new Walker(entry, options, callback);
 }
+
+walker.OPTIONS = {
+  BROWSER: {
+    detectCyclic: true,
+    strictRequire: true,
+    allowAbsolutePath: false,
+    extFallbacks: ['.js', '.json'],
+    parseForeignModule: false
+  }
+};
 
 
 function makeDefault (object, key, value) {
@@ -38,11 +49,10 @@ function Walker (entry, options, callback) {
   makeDefault(options, 'strictRequire', true);
   makeDefault(options, 'allowAbsolutePath', true);
   makeDefault(options, 'parseForeignModule', true);
-
   makeDefault(options, 'extFallbacks', EXTS_NODE);
 
   if (!this._checkExts()) {
-    throw new Error('Invalid value of options.extFallbacks');
+    throw new Error('Invalid value of `options.extFallbacks`');
   }
 
   this.callback = callback;
@@ -50,6 +60,7 @@ function Walker (entry, options, callback) {
 }
 
 
+// Checks if the `options.extFallbacks` is valid
 Walker.prototype._checkExts = function() {
   var exts = this.options.extFallbacks;
 
@@ -66,78 +77,42 @@ Walker.prototype._checkExts = function() {
 Walker.prototype._walk = function() {
   var self = this;
   var entry = this.entry;
-  var called;
 
-  function cb (err, tree) {
+  var called;
+  function cb (err) {
     if (called) {
       return;
     }
-
     called = true;
 
     if (err) {
       return self.callback(err);
     }
-
     // Returns the node of the entry point
-    self.callback(null, self._getNode(entry), self.nodes);
+    self.callback(null, self.nodes);
   }
 
   var err;
   var q = async.queue(function (task, done) {
-    function sub_node (err) {
-      if (err) {
-        cb(err);
-      }
-
-      done();
-    }
-
+    // `path` will always be an absolute path.
     var path = task.path;
-    var ext = self._getExt(path);
-    var node = self._getNode(path);
-    node.ext = ext;
-
-    if (ext === '.json') {
-      return self._parseJsonFile(path, sub_node);
-    }
-
-    if (ext === '.node') {
-      return self._parseNodeFile(path, sub_node);
-    }
-
-    // Each node must be created before `._parseFile()`
-    self._parseFile(path, function (err, data) {
+    // Each node must be created before `._parseFileDependencies()`
+    self._parseFileDependencies(path, function (err) {
       if (err) {
-        cb(err);
-        return done();
+        return cb(err);
       }
-
-      self._dealDependencies(data, sub_node);
+      done();
     });
   });
 
-  q.drain = cb;
-
   // Creates entry node
   this._createNode(entry);
+  q.drain = cb;
   // Adds initial task
   q.push({
     path: entry
   });
-
   this.queue = q;
-};
-
-
-var REGEX_MATCH_EXT = /\.[a-z]+$/i;
-Walker.prototype._getExt = function(file) {
-  var match = file.match(REGEX_MATCH_EXT);
-  if (!match) {
-    return '';
-  }
-
-  return match[0].toLowerCase();
 };
 
 
@@ -147,6 +122,7 @@ Walker.prototype._parseNodeFile = function(path, callback) {
 };
 
 
+// @param {Path} path Absolute path
 Walker.prototype._parseJsonFile = function(path, callback) {
   var self = this;
   parser.read(path, function (err, content) {
@@ -156,15 +132,28 @@ Walker.prototype._parseJsonFile = function(path, callback) {
 
     var node = self._getNode(path);
     node.code = content;
-    node.dependencies = [];
-    node.unresolvedDependencies = [];
+    node.dependencies = {};
     callback(null);
   });
 };
 
 
-Walker.prototype._parseFile = function(path, callback) {
+Walker.prototype._parseFileDependencies = function(path, callback) {
   var self = this;
+
+  var path = task.path;
+    mod(path, function (real) {
+      if (!real) {
+        return sub_done({
+          code: 'MODULE_NOT_FOUND',
+          message: "Cannot find module '" + path + "'",
+          data: {
+            path: path
+          }
+        });
+      }
+
+      
 
   parser.parse(path, {
     strictRequire: this.options.strictRequire
@@ -271,44 +260,44 @@ Walker.prototype._dealDependencies = function(data, callback) {
 };
 
 
-Walker.prototype._resolveDependency = function(dep) {
-  // Foreign module with a top id
-  if (!this._isAbsolutePath(dep)) {
-    return dep;
-  }
+// Walker.prototype._resolveDependency = function(dep) {
+//   // Foreign module with a top id
+//   if (!this._isAbsolutePath(dep)) {
+//     return dep;
+//   }
 
-  var resolved = null;
-  try {
-    resolved = require.resolve(dep);
-  } catch(e) {}
+//   var resolved = null;
+//   try {
+//     resolved = require.resolve(dep);
+//   } catch(e) {}
 
-  // If require.resolve throws, resolved will be `null`
-  if (resolved) {
-    resolved = this._cleanResolvedDependency(resolved);
-  }
+//   // If require.resolve throws, resolved will be `null`
+//   if (resolved) {
+//     resolved = this._cleanResolvedDependency(resolved);
+//   }
   
-  return resolved;
-};
+//   return resolved;
+// };
 
 
-// `require.resolve` will always fallback to 
-// `.js`, then `.json`, and finally `.node`.
-// But we not always do that, so we need to clean the resolved path.
-Walker.prototype._cleanResolvedDependency = function(resolved) {
-  var ext = this._getExt(resolved);
-  // if no extension, the module must exist.
-  if (!ext) {
-    return resolved;
-  }
+// // `require.resolve` will always fallback to 
+// // `.js`, then `.json`, and finally `.node`.
+// // But we not always do that, so we need to clean the resolved path.
+// Walker.prototype._cleanResolvedDependency = function(resolved) {
+//   var ext = this._getExt(resolved);
+//   // if no extension, the module must exist.
+//   if (!ext) {
+//     return resolved;
+//   }
 
-  if (~this.options.extFallbacks.indexOf(ext)) {
-    return resolved;
-  }
+//   if (~this.options.extFallbacks.indexOf(ext)) {
+//     return resolved;
+//   }
 
-  // if `options.extFallbacks` does not contain `ext`,
-  // we consider it not found.
-  return null;
-};
+//   // if `options.extFallbacks` does not contain `ext`,
+//   // we consider it not found.
+//   return null;
+// };
 
 
 Walker.prototype._addDependent = function(dependent, dependency) {
@@ -330,20 +319,11 @@ Walker.prototype._createNode = function(id) {
 
   if (!node) {
     node = this.nodes[id] = {
-      id: id,
-      dependents: []
-      // version will be set later
+      dependents: [],
+      entry: id === this.entry,
+      foreign: !this._isAbsolutePath(id)
     };
-
-    if (id === this.entry) {
-      node.isEntryPoint = true;
-    }
-
-    if (!this._isAbsolutePath(id)) {
-      node.isForeign = true;
-    }
   }
-
   return node;
 };
 
@@ -373,16 +353,13 @@ Walker.prototype._printCyclic = function(trace) {
   var list = trace.map(function (node, index) {
     return index + 1 + ': ' + node.id;
   });
-
   list.pop();
 
   var flow = trace.map(function (node, index) {
     ++ index;
-
     return index === 1 || index === trace.length
       ? '[1]'
       : index;
-
   });
 
   return list.join('\n') + '\n\n' + flow.join(' -> ');
