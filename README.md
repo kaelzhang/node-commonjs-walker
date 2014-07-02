@@ -63,7 +63,6 @@ Then, the `nodes` object will be something like:
 ```js
 {
   '/path/to/index.js': {
-    dependents: [],
     entry: true,
     dependencies: {
       './a': '/path/to/a/index.json',
@@ -72,17 +71,11 @@ Then, the `nodes` object will be something like:
     code: <Buffer>
   },
   '/path/to/a/index.json': {
-    dependents: [
-      '/path/to/index.js'
-    ],
     dependencies: {},
     code: <Buffer>
   },
   'b': {
-    foreign: true,
-    dependents: [
-      '/path/to/index.js'
-    ]
+    foreign: true
   }
 }
 ```
@@ -136,7 +129,7 @@ Property | Type | Description
 -------- | ---- | -----------
 entry | `Boolean` | whether the current module is the entry point
 foreign | `Boolean` | whether the current module is from a foreign package.
-dependents   | `Array.<String>` | the dependent modules. If there's no dependents, it will be `[]`
+<!-- dependents   | `Array.<String>` | the dependent modules. If there's no dependents, it will be `[]` -->
 
 #### If `foreign` is `false`
 
