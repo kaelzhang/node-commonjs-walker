@@ -94,7 +94,7 @@ All options are optional. By default, `walker` works in a very strict mode.
 Option | Type | Default | Description
 ------ | ---- | ------- | ------------
 detectCyclic | `Boolean` | true | whether should check cyclic dependencies
-strictRequire | `Boolean` | true | whether should check the usage of method `require()`
+strictRequire | `Boolean` | true | whether should check the usage of method `require()`. If true, the argument of `require()` must be an literal string.
 allowAbsolutePath | `Boolean` | true | whether should allow to require an absolute path.
 extFallbacks | `Array` | `['.js', '.json', '.node']` | see `options.extFallbacks` section
 parseForeignModule | `Boolean` | true | will try to resolve foreign modules by `require.resolve()`. Set this option to false to handle foreign modules yourself.
@@ -112,6 +112,20 @@ Especially, only tree values below are allowed:
 - `['.js']`
 - `['.js', '.json']`,
 - `['.js', '.json', '.node']`
+
+## walker.OPTIONS.BROWSER
+
+An usual preset of options for browsers, as
+
+```js
+{
+  detectCyclic: true,
+  strictRequire: true,
+  allowAbsolutePath: false,
+  extFallbacks: ['.js', '.json'],
+  parseForeignModule: false 
+}
+```
 
 ## Struct: walker.Module
 

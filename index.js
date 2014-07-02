@@ -37,6 +37,7 @@ function Walker (entry, options, callback) {
   makeDefault(options, 'detectCyclic', true);
   makeDefault(options, 'strictRequire', true);
   makeDefault(options, 'allowAbsolutePath', true);
+  makeDefault(options, 'parseForeignModule', true);
 
   makeDefault(options, 'extFallbacks', EXTS_NODE);
 
