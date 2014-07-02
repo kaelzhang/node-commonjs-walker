@@ -90,6 +90,7 @@ detectCyclic | `Boolean` | true | whether should check cyclic dependencies
 strictRequire | `Boolean` | true | whether should check the usage of method `require()`. If true, the argument of `require()` must be an literal string.
 allowAbsolutePath | `Boolean` | true | whether should allow to require an absolute path.
 extensions | `Array` | `['.js', '.json', '.node']` | see `options.extensions` section
+
 <!-- parseForeignModule | `Boolean` | true | will try to resolve foreign modules by `require.resolve()`. Set this option to false to handle foreign modules yourself. -->
 
 #### options.extensions
@@ -129,6 +130,7 @@ Property | Type | Description
 -------- | ---- | -----------
 entry | `Boolean` | whether the current module is the entry point
 foreign | `Boolean` | whether the current module is from a foreign package.
+
 <!-- dependents   | `Array.<String>` | the dependent modules. If there's no dependents, it will be `[]` -->
 
 #### If `foreign` is `false`
