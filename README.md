@@ -12,7 +12,7 @@ var walker = require('commonjs-walker');
 
 - `require()` a directory.
 - If a module is not found, commonjs-walker will attempt to load the required filename with the added extension of `.js`, `.json`, and then `.node`, according to [File Modules](http://nodejs.org/api/modules.html#modules_file_modules)
-- You can define what extensions should commonjs-walker fallback to by [options.fallbackExts](#optionsfallbackExts), which will be very usefull for browser-side commonjs modules.
+- You can define what extensions should commonjs-walker fallback to by [options.extensions](#optionsextensions), which will be very usefull for browser-side commonjs modules.
 
 ## walker(entry, [options], callback)
 
@@ -96,16 +96,16 @@ Option | Type | Default | Description
 detectCyclic | `Boolean` | true | whether should check cyclic dependencies
 strictRequire | `Boolean` | true | whether should check the usage of method `require()`. If true, the argument of `require()` must be an literal string.
 allowAbsolutePath | `Boolean` | true | whether should allow to require an absolute path.
-fallbackExts | `Array` | `['.js', '.json', '.node']` | see `options.fallbackExts` section
+extensions | `Array` | `['.js', '.json', '.node']` | see `options.extensions` section
 parseForeignModule | `Boolean` | true | will try to resolve foreign modules by `require.resolve()`. Set this option to false to handle foreign modules yourself.
 
-#### options.fallbackExts
+#### options.extensions
 
 type `Array`
 
 When we `require()` a `path`, if `path` is not found, nodejs will attempt to load the required filename with the added extension of `.js`, `.json`, and then `.node`. [Reference via](http://nodejs.org/api/modules.html#modules_file_modules)
 
-But for browser-side environment, most usually, we do not support extension `.node` which is what `options.fallbackExts` is for.
+But for browser-side environment, most usually, we do not support extension `.node` which is what `options.extensions` is for.
 
 Especially, only tree values below are allowed:
 
@@ -122,7 +122,7 @@ An usual preset of options for browsers, as
   detectCyclic: true,
   strictRequire: true,
   allowAbsolutePath: false,
-  fallbackExts: ['.js', '.json'],
+  extensions: ['.js', '.json'],
   parseForeignModule: false 
 }
 ```
