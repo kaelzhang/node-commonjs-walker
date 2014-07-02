@@ -144,7 +144,7 @@ dependents   | `Array.<String>` | the dependent modules. If there's no dependent
 Property | Type | Description
 -------- | ---- | -----------
 code | `Buffer` | the file content of the current module.
-dependencies | `Object` | If the module has no dependencies, it will be `{}`
+dependencies | `Object.<id: path>` | `id` is the argument of `require(id)`. `path` is the resolved absolute path by `id`. If the module has no dependencies, it will be `{}`
 
 ## Class: walker.Error
 
