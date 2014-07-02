@@ -11,26 +11,25 @@ var cases = [
   {
     desc: 'only foreign deps',
     file: 'simplest.js',
-    expect: function (err, tree) {
+    expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
-      expect(tree.code.toString()).to.equal("require('abc');");
-      expect(tree.dependencies[0].isForeign).to.equal(true);
+      expect(entry.code.toString()).to.equal("require('abc');");
+      expect(nodes['abc'].foreign).to.equal(true);
     }
   },
   {
     desc: 'one dep',
     file: 'one-dep/index.js',
-    expect: function (err, tree) {
+    expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
-
-      var dep = tree.dependencies[0];
-      expect(dep.id).to.equal( node_path.join(root, 'one-dep', 'a.js') );
+      var dep = entry.dependencies['./a'];
+      expect(dep).to.equal( node_path.join(root, 'one-dep', 'a.js') );
     }
   },
   {
     desc: 'circular',
     file: 'circular/index.js',
-    expect: function (err, tree) {
+    expect: function (err, path, nodes, entry) {
       expect(err).not.to.equal(null);
       expect(err.code).to.equal('CYCLIC_DEPENDENCY');
     }
@@ -41,7 +40,7 @@ var cases = [
       detectCyclic: false
     },
     file: 'circular/index.js',
-    expect: function (err, tree) {
+    expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
     }
   },
@@ -52,7 +51,7 @@ var cases = [
       // allowAbsolutePath: false
     },
     file: 'not-found/one.js',
-    expect: function (err, tree) {
+    expect: function (err, path, nodes, entry) {
       expect(err.code).to.equal('MODULE_NOT_FOUND');
     }
   },
@@ -60,17 +59,17 @@ var cases = [
     desc: 'module not found: fallback, still not found',
     options: {},
     file: 'not-found/two.js',
-    expect: function (err, tree) {
+    expect: function (err, path, nodes, entry) {
       expect(err.code).to.equal('MODULE_NOT_FOUND');
     }
   },
   {
     desc: 'module not found: limited by exts',
     options: {
-      extFallbacks: ['.js', '.json']
+      extensions: ['.js', '.json']
     },
     file: 'not-found/three.js',
-    expect: function (err) {
+    expect: function (err, path, nodes, entry) {
       expect(err.code).to.equal('MODULE_NOT_FOUND');
     }
   },
@@ -80,10 +79,9 @@ var cases = [
       // extFallbacks: ['.js', '.json']
     },
     file: 'not-found/three.js',
-    expect: function (err, tree) {
+    expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
-      var file = node_path.join(root, 'not-found', 'dep3.node');
-      expect(tree.dependencies[0].id).to.equal(file);
+      expect(!!entry).to.equal(true);
     }
   },
   // {
@@ -99,7 +97,7 @@ var cases = [
 
     },
     file: 'error-require/a.js',
-    expect: function (err, tree) {
+    expect: function (err, path, nodes, entry) {
       expect(err).to.not.equal(null);
       expect(err.code).to.equal('WRONG_USAGE_REQUIRE');
     }
@@ -109,20 +107,28 @@ var cases = [
 
 describe("walker()", function(){
   cases.forEach(function (c) {
-    it(c.desc, function(done){
+    var i = c.only
+      ? it.only
+      : it;
+
+    i(c.desc, function(done){
       var file = node_path.join(root, c.file);
-      walker(file, c.options || {}, function (err, tree) {
+      walker(file, c.options || {}, function (err, nodes) {
         done();
-        c.expect(err, tree);
+        var entry;
+        if (!err && nodes) {
+          entry = nodes[file]
+        }
+        c.expect(err, file, nodes, entry);
       });
     });
   });
 
-  it('let `options` be optional', function(done){
-      var file = node_path.join(root, cases[0].file);
-      walker(file,function(err, tree){
-        done();
-        cases[0].expect(err,tree);
-      });
-  });
+  // it('let `options` be optional', function(done){
+  //     var file = node_path.join(root, cases[0].file);
+  //     walker(file,function(err, tree){
+  //       done();
+  //       cases[0].expect(err,tree);
+  //     });
+  // });
 });

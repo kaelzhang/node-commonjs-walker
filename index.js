@@ -139,7 +139,6 @@ Walker.prototype._parseJsonFile = function(path, callback) {
 
 Walker.prototype._parseFileDependencies = function(path, callback) {
   var node = this._getNode(path);
-  var path = task.path;
   var options = this.options;
   var self = this;
   parser.parse(path, {
@@ -150,6 +149,10 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
   // - path
   // - dependencies
   }, function (err, data) {
+    if (err) {
+      return callback(err);
+    }
+    
     node.code = data.code;
     node.dependencies = {};
 
@@ -166,15 +169,23 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
         });
       }
 
-      if (!self._isForeign(dep)) {
+      if (!self._isRelativePath(dep)) {
         return self._dealDependency(dep, dep, node, done);
       }
 
       resolve(dep, {
+        basedir: node_path.dirname(path),
         extensions: options.extensions
       }, function (err, real) {
         if (err) {
-          return done(err);
+          return done({
+            code: 'MODULE_NOT_FOUND',
+            message: err.message,
+            stack: err.stack,
+            data: {
+              path: dep
+            }
+          });
         }
 
         self._dealDependency(dep, real, node, callback);
@@ -187,17 +198,17 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
 
 Walker.prototype._dealDependency = function(dep, real, node, callback) {
   node.dependencies[dep] = real;
-  var sub_node = self._getNode(real);
+  var sub_node = this._getNode(real);
   if (!sub_node) {
-    sub_node = self._createNode(real);
+    sub_node = this._createNode(real);
     if (!sub_node.foreign) {
       // only if the node is newly created.
-      self.queue.push({
+      this.queue.push({
         path: real
       });
     }
-    self._addDependent(node, sub_node);
-    return done(null);
+    // this._addDependent(node, sub_node);
+    return callback(null);
   }
 
   // We only check the node if it meets the conditions below:
@@ -206,14 +217,14 @@ Walker.prototype._dealDependency = function(dep, real, node, callback) {
   // If one of the ancestor dependents of `node` is `current`, it forms a circle.
   var circular_trace;
   if (
-    options.detectCyclic 
+    this.options.detectCyclic 
 
     // node -> sub_node
-    && (circular_trace = circular.trace(sub_node, node))
+    && (circular_trace = circular.trace(sub_node, node, this.nodes))
   ) {
-    return done({
+    return callback({
       code: 'CYCLIC_DEPENDENCY',
-      message: 'Cyclic dependency found: \n' + self._printCyclic(circular_trace),
+      message: 'Cyclic dependency found: \n' + this._printCyclic(circular_trace),
       data: {
         trace: circular_trace,
         path: real
@@ -221,17 +232,17 @@ Walker.prototype._dealDependency = function(dep, real, node, callback) {
     });
   }
 
-  self._addDependent(node, sub_node);
-  done(null);
+  // this._addDependent(node, sub_node);
+  callback(null);
 };
 
 
-Walker.prototype._addDependent = function(dependent, dependency) {
-  // adds dependent
-  if (!~sub_node.dependents.indexOf(node)) {
-    sub_node.dependents.push(node);
-  }
-};
+// Walker.prototype._addDependent = function(dependent, dependency) {
+//   // adds dependent
+//   if (!~dependency.dependents.indexOf(dependent)) {
+//     dependency.dependents.push(dependent);
+//   }
+// };
 
 
 // Creates the node by id if not exists.
@@ -260,6 +271,11 @@ Walker.prototype._isForeign = function(path) {
 
 Walker.prototype._isAbsolutePath = function(path) {
   return node_path.resolve(path) === path.replace(/[\/\\]+$/, '');
+};
+
+
+Walker.prototype._isRelativePath = function(path) {
+  return path.indexOf('./') === 0 || path.indexOf('../') === 0;
 };
 
 
