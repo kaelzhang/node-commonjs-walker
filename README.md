@@ -11,9 +11,10 @@ var walker = require('commonjs-walker');
 ## Supports:
 
 - `require()` a directory.
-- if a module is not find, commonjs-walker will attempt to load the required filename with the added extension of `.js`, `.json`, and then `.node`, according to [File Modules](http://nodejs.org/api/modules.html#modules_file_modules)
+- If a module is not found, commonjs-walker will attempt to load the required filename with the added extension of `.js`, `.json`, and then `.node`, according to [File Modules](http://nodejs.org/api/modules.html#modules_file_modules)
+- You can define what extensions should commonjs-walker fallback to by [options.extFallbacks](#optionsextfallbacks), which will be very usefull for browser-side commonjs modules.
 
-## walker(entry, [options,] callback)
+## walker(entry, [options], callback)
 
 ```js
 walker('/path/to/entry.js', options, function(err, nodes){
@@ -21,13 +22,19 @@ walker('/path/to/entry.js', options, function(err, nodes){
 });
 ```
 
+Walks down from a entry point, such as `package.main` of commonjs or any JavaScript file based on CommonJS, and tries to create a `walker.Module` instance of the top level. 
+
+- entry `Path` the absolute path of the entry point.
+- nodes `Object` the hashmap of `<path>: <walker.Module>`
+
+
 If the file structure of your project is (actually it is a very extreme scenario):
 
 ```
 /path/to
        |-- index.js
        |-- a
-       |   |-- index.json      	
+           |-- index.json
 ```
 
 index.js:
@@ -46,10 +53,9 @@ a/index.json
 Code:
 
 ```js
-walker('/path/to/index.js', function(err, tree, nodes){
-	console.log(tree);
+walker('/path/to/index.js', function(err, nodes){
 	console.log(nodes);
-})
+});
 ```
 
 Then, the `nodes` object will be something like:
@@ -81,12 +87,6 @@ Then, the `nodes` object will be something like:
 }
 ```
 
-
-Walks down from a entry point, such as `package.main` of commonjs, and tries to create a `walker.Module` instance of the top level. 
-
-- entry `Path` the absolute path of the entry point.
-- nodes `Object` the hashmap of `<path>: <walker.Module>`
-
 #### options
 
 All options are optional. By default, `walker` works in a very strict mode.
@@ -97,16 +97,17 @@ detectCyclic | `Boolean` | true | whether should check cyclic dependencies
 strictRequire | `Boolean` | true | whether should check the usage of method `require()`
 allowAbsolutePath | `Boolean` | true | whether should allow to require an absolute path.
 extFallbacks | `Array` | `['.js', '.json', '.node']` | see `options.extFallbacks` section
+parseForeignModule | `Boolean` | true | will try to resolve foreign modules by `require.resolve()`. Set this option to false to handle foreign modules yourself.
 
 #### options.extFallbacks
 
 type `Array`
 
-When we `require()` a `path`, if `path` is not found, nodejs will attempt to load the required filename with the added extension of `.js`, `.json`, and then `.node`. [ref](http://nodejs.org/api/modules.html#modules_file_modules)
+When we `require()` a `path`, if `path` is not found, nodejs will attempt to load the required filename with the added extension of `.js`, `.json`, and then `.node`. [Reference via](http://nodejs.org/api/modules.html#modules_file_modules)
 
-But for browser-side environment, most usually, we do not support extension `.node` which is why `options.extFallbacks`.
+But for browser-side environment, most usually, we do not support extension `.node` which is what `options.extFallbacks` is for.
 
-Especially, only tree values are allowed below:
+Especially, only tree values below are allowed:
 
 - `['.js']`
 - `['.js', '.json']`,
@@ -120,20 +121,16 @@ Actually, there is no `walker.Module` exists. We only use it to declare and desc
 
 Property | Type | Description
 -------- | ---- | -----------
-id | `String` | the id of the module
-ext | `String` | the extension of the file
-isEntryPoint | `Boolean` | whether the current module is the entry point
-dependents   | `Array.<walker.module>` | the dependent modules. If there's no dependents, it will be `[]`
-isForeign | `Boolean` | whether the current module is from a foreign package.
+entry | `Boolean` | whether the current module is the entry point
+foreign | `Boolean` | whether the current module is from a foreign package.
+dependents   | `Array.<String>` | the dependent modules. If there's no dependents, it will be `[]`
 
-#### If `isForeign` is `false`
+#### If `options.parseForeignModule` is `false`
 
 Property | Type | Description
 -------- | ---- | -----------
 code | `Buffer` | the file content of the current module.
-dependencies | `Array.<walker.Module>` | the dependencies of the current module. If the module has no dependencies, it will be `[]`
-unresolvedDependencies | `Array.<String>` | the array contains the items `require()`d by the module.
-
+dependencies | `Object` | If the module has no dependencies, it will be `{}`
 
 ## Class: walker.Error
 
@@ -142,7 +139,6 @@ unresolvedDependencies | `Array.<String>` | the array contains the items `requir
 - stack `String` the origin error.stack
 - data `Object` the object of the major information of the error, this is useful for i18n.
 
-
 ## Error codes
 
 ##### NOT_ALLOW_ABSOLUTE_PATH
@@ -150,5 +146,4 @@ unresolvedDependencies | `Array.<String>` | the array contains the items `requir
 ##### MODULE_NOT_FOUND
 
 ##### CYCLIC_DEPENDENCY
-
 
