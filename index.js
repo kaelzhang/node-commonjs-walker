@@ -138,14 +138,6 @@ Walker.prototype._parseJsonFile = function(path, callback) {
 
 
 Walker.prototype._parseFileDependencies = function(path, callback) {
-  var self = this;
-
-  
-    mod(path, function (real) {
-      if (!real) {
-        return sub_done();
-      }
-
   var node = this._getNode(path);
   var path = task.path;
   var options = this.options;
@@ -179,10 +171,13 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
       }
 
       resolve(dep, {
-        basedir: 
-        extensions
-      }, function (real) {
-        
+        extensions: options.extensions
+      }, function (err, real) {
+        if (err) {
+          return done(err);
+        }
+
+        self._dealDependency(dep, real, node, callback);
       });
     }, callback);
   });
@@ -191,16 +186,6 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
 
 
 Walker.prototype._dealDependency = function(dep, real, node, callback) {
-  if (!real) {
-    return done({
-      code: 'MODULE_NOT_FOUND',
-      message: 'Cannot find module "' + path + '".',
-      data: {
-        path: path
-      }
-    });
-  }
-
   node.dependencies[dep] = real;
   var sub_node = self._getNode(real);
   if (!sub_node) {
@@ -215,11 +200,9 @@ Walker.prototype._dealDependency = function(dep, real, node, callback) {
     return done(null);
   }
 
-
   // We only check the node if it meets the conditions below:
   // 1. already exists: all new nodes are innocent.
   // 2. but assigned as a dependency of anothor node
-
   // If one of the ancestor dependents of `node` is `current`, it forms a circle.
   var circular_trace;
   if (

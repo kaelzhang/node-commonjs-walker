@@ -101,7 +101,7 @@ var cases = [
     file: 'error-require/a.js',
     expect: function (err, tree) {
       expect(err).to.not.equal(null);
-      expect(err.code).to.equal('EREQUIRE');
+      expect(err.code).to.equal('WRONG_USAGE_REQUIRE');
     }
   }
 ];
