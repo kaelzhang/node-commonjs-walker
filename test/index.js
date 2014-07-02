@@ -111,24 +111,37 @@ describe("walker()", function(){
       ? it.only
       : it;
 
-    i(c.desc, function(done){
-      var file = node_path.join(root, c.file);
-      walker(file, c.options || {}, function (err, nodes) {
-        done();
-        var entry;
-        if (!err && nodes) {
-          entry = nodes[file]
-        }
-        c.expect(err, file, nodes, entry);
-      });
-    });
-  });
+    function run (noOptions) {
+      var desc = c.desc;
+      if (noOptions) {
+        desc += ': no argument `options`';
+      }
 
-  it('let `options` be optional', function(done){
-      var file = node_path.join(root, cases[0].file);
-      walker(file,function(err, tree){
-        done();
-        cases[0].expect(err,tree);
+      i(desc, function(done){
+        var file = node_path.join(root, c.file);
+        var options = c.options || {};
+        var callback = function (err, nodes) {
+          done();
+          var entry;
+          if (!err && nodes) {
+            entry = nodes[file]
+          }
+          c.expect(err, file, nodes, entry);
+        };
+
+        if (noOptions) {
+          if (Object.keys(options) !== 0) {
+            done();
+            return;
+          }
+          walker(file, callback);
+        } else {
+          walker(file, options, callback);
+        }
       });
+    }
+
+    run();
+    run(true);
   });
 });
