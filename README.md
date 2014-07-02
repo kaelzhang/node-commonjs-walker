@@ -80,7 +80,7 @@ Then, the `nodes` object will be something like:
 }
 ```
 
-#### options
+## options
 
 All options are optional. By default, `walker` works in a very strict mode.
 
