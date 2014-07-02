@@ -1,7 +1,0 @@
-require('./no-fallback')
-require('./fallback.js')
-require('./fallback-json.json')
-require('./fallback-node.node')
-require('./dir')
-require('./dir-pkg')
-require('./dir-pkg-fallback')

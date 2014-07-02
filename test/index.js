@@ -47,8 +47,6 @@ var cases = [
   {
     desc: 'module not found',
     options: {
-      // extFallbacks: ['.js', '.json', '.node'],
-      // allowAbsolutePath: false
     },
     file: 'not-found/one.js',
     expect: function (err, path, nodes, entry) {
@@ -76,7 +74,6 @@ var cases = [
   {
     desc: 'if not limited, could be found',
     options: {
-      // extFallbacks: ['.js', '.json']
     },
     file: 'not-found/three.js',
     expect: function (err, path, nodes, entry) {
@@ -84,13 +81,13 @@ var cases = [
       expect(!!entry).to.equal(true);
     }
   },
-  // {
-  //   desc: 'modules and directories',
-  //   options: {
+  {
+    desc: 'modules and directories',
+    options: {
 
-  //   },
-  //   file: 'not'
-  // },
+    },
+    file: 'not'
+  },
   {
     desc: 'error require',
     options: {
