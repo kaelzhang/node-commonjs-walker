@@ -164,7 +164,7 @@ var cases = [
     options: {
     },
     file: 'fallback/dir.js',
-    expect: function (err, path, nodes, entry) { console.log(err)
+    expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
       var dep = './cases/dir';
       var real = node_path.join( node_path.dirname(path), dep ) + '/index.js';
@@ -181,6 +181,15 @@ var cases = [
       var dep = './cases/dir/';
       var real = node_path.join( node_path.dirname(path), dep ) + 'index.js';
       expect(entry.dependencies[dep]).to.equal(real);
+    }
+  },
+  {
+    desc: '#13: multiple requires',
+    options: {
+    },
+    file: 'multi-require/index.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
     }
   },
 ];

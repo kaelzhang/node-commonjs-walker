@@ -188,7 +188,7 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
           });
         }
 
-        self._dealDependency(dep, real, node, callback);
+        self._dealDependency(dep, real, node, done);
       });
     }, callback);
   });
