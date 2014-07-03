@@ -192,6 +192,13 @@ var cases = [
       expect(err).to.equal(null);
     }
   },
+  {
+    desc: '#14: parsing a json file will not fail',
+    file: 'json/index.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
+    }
+  }
 ];
 
 
