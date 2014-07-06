@@ -210,7 +210,21 @@ var cases = [
     expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
       var a = node_path.join( node_path.dirname(path), 'a.js' );
+      expect('a' in entry.dependencies).to.equal(true);
       expect(entry.dependencies['a']).to.equal(a);
+    }
+  },
+  {
+    desc: '#15: package.as, foreign',
+    options: {
+      'as': {
+        'a': 'b'
+      }
+    },
+    file: 'as/foreign.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
+      expect(entry.dependencies['a']).to.equal('b');
     }
   }
 ];
