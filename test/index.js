@@ -198,6 +198,20 @@ var cases = [
     expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
     }
+  },
+  {
+    desc: '#15: package.as',
+    options: {
+      'as': {
+        'a': './a'
+      }
+    },
+    file: 'as/index.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
+      var a = node_path.join( node_path.dirname(path), 'a.js' );
+      expect(entry.dependencies['a']).to.equal(a);
+    }
   }
 ];
 
