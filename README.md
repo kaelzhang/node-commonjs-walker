@@ -90,6 +90,7 @@ detectCyclic | `Boolean` | true | whether should check cyclic dependencies
 strictRequire | `Boolean` | true | whether should check the usage of method `require()`. If true, the argument of `require()` must be an literal string.
 allowAbsolutePath | `Boolean` | true | whether should allow to require an absolute path.
 extensions | `Array` | `['.js', '.json', '.node']` | see `options.extensions` section
+as | `Object` | `{}` | An object map that define the alias of the parameter of `require` 
 
 <!-- parseForeignModule | `Boolean` | true | will try to resolve foreign modules by `require.resolve()`. Set this option to false to handle foreign modules yourself. -->
 
@@ -107,9 +108,7 @@ Especially, only tree values below are allowed:
 - `['.js', '.json']`,
 - `['.js', '.json', '.node']`
 
-## walker.OPTIONS.BROWSER
-
-An usual preset of options for browsers, as
+## Frequent Options for Browsers
 
 ```js
 {
