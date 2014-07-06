@@ -16,17 +16,9 @@ function walker (entry, options, callback) {
     options = {};
     callback = arguments[1];
   }
+  options['as'] || (options['as'] = {});
   return new Walker(entry, options, callback);
 }
-
-walker.OPTIONS = {
-  BROWSER: {
-    detectCyclic: true,
-    strictRequire: true,
-    allowAbsolutePath: false,
-    extensions: ['.js', '.json']
-  }
-};
 
 
 function makeDefault (object, key, value) {
@@ -158,6 +150,8 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
 
     var dependencies = data.dependencies;
     async.each(dependencies, function (dep, done) {
+      var origin = dep;
+
       if (dep.indexOf('/') === 0 && !options.allowAbsolutePath) {
         return done({
           code: 'NOT_ALLOW_ABSOLUTE_PATH',
@@ -170,7 +164,12 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
       }
 
       if (!self._isRelativePath(dep)) {
-        return self._dealDependency(dep, dep, node, done);
+        // we only map top level id for now
+        dep = options['as'][dep] || dep;
+      }
+
+      if (!self._isRelativePath(dep)) {
+        return self._dealDependency(origin, dep, node, done);
       }
 
       resolve(dep, {
@@ -188,7 +187,7 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
           });
         }
 
-        self._dealDependency(dep, real, node, done);
+        self._dealDependency(origin, real, node, done);
       });
     }, callback);
   });
