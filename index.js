@@ -274,7 +274,7 @@ Walker.prototype._isAbsolutePath = function(path) {
 
 
 Walker.prototype._isRelativePath = function(path) {
-  return path.indexOf('./') === 0 || path.indexOf('../') === 0;
+  return path.indexOf('.' + node_path.sep) === 0 || path.indexOf('..' + node_path.sep) === 0;
 };
 
 
