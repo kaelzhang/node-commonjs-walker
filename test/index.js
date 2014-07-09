@@ -167,7 +167,7 @@ var cases = [
     expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
       var dep = './cases/dir';
-      var real = node_path.join( node_path.dirname(path), dep ) + '/index.js';
+      var real = node_path.join( node_path.dirname(path), dep ) + node_path.sep + 'index.js';
       expect(entry.dependencies[dep]).to.equal(real);
     }
   },

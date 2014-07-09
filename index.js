@@ -274,7 +274,11 @@ Walker.prototype._isAbsolutePath = function(path) {
 
 
 Walker.prototype._isRelativePath = function(path) {
-  return path.indexOf('.' + node_path.sep) === 0 || path.indexOf('..' + node_path.sep) === 0;
+  // Actually, this method is called after the parser.js,
+  // and all paths are parsed from require(foo),
+  // so `foo` will never be affected by windows,
+  // so we should not use `'.' + node_path.sep` to test these paths
+  return path.indexOf('./') === 0 || path.indexOf('../') === 0;
 };
 
 
