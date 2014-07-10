@@ -165,9 +165,10 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
 
       if (!self._isRelativePath(dep)) {
         // we only map top level id for now
-        dep = options['as'][dep] || dep;
+        dep = self._solveAliasedDependency(options['as'][dep], path) || dep;
       }
 
+      // package name, not a path
       if (!self._isRelativePath(dep)) {
         return self._dealDependency(origin, dep, node, done);
       }
@@ -194,6 +195,36 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
 };
 
 
+// #17
+// If we define an `as` field in cortex.json
+// {
+//   "as": {
+//     "abc": './abc.js' // ./abc.js is relative to the root directory 
+//   }
+// }
+// @param {String} dep path of dependency
+// @param {String} env_path the path of the current file
+Walker.prototype._solveAliasedDependency = function(dep, env_path) {
+  var cwd = this.options.cwd;
+
+  if (!dep || !cwd || !this._isRelativePath(dep)) {
+    return dep;
+  }
+
+  dep = node_path.join(cwd, dep);
+  dep = node_path.relative(node_path.dirname(env_path), dep)
+    // After join and relative, dep will contains `node_path.sep` which varies from operating system,
+    // so normalize it
+    .replace(/\\/g, '/');
+
+  if (!~dep.indexOf('..')) {
+    // 'abc.js' -> './abc.js'
+    dep = './' + dep;
+  }
+
+  return dep;
+};
+
 
 Walker.prototype._dealDependency = function(dep, real, node, callback) {
   node.dependencies[dep] = real;
@@ -206,7 +237,6 @@ Walker.prototype._dealDependency = function(dep, real, node, callback) {
         path: real
       });
     }
-    // this._addDependent(node, sub_node);
     return callback(null);
   }
 
@@ -230,18 +260,8 @@ Walker.prototype._dealDependency = function(dep, real, node, callback) {
       }
     });
   }
-
-  // this._addDependent(node, sub_node);
   callback(null);
 };
-
-
-// Walker.prototype._addDependent = function(dependent, dependency) {
-//   // adds dependent
-//   if (!~dependency.dependents.indexOf(dependent)) {
-//     dependency.dependents.push(dependent);
-//   }
-// };
 
 
 // Creates the node by id if not exists.
