@@ -226,6 +226,20 @@ var cases = [
       expect(err).to.equal(null);
       expect(entry.dependencies['a']).to.equal('b');
     }
+  },
+  {
+    desc: '#17: deep deps of package.as',
+    options: {
+      'as': {
+        'abc': './deep/dep.js'
+      },
+      cwd: node_path.join(root, 'as')
+    },
+    file: 'as/deep/index.js',
+    expect: function (err, path, nodes, entry) {
+      expect(err).to.equal(null);
+      expect(entry.dependencies['abc']).to.equal(node_path.join(node_path.dirname(path), './dep.js'));
+    }
   }
 ];
 
