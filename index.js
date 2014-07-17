@@ -263,7 +263,7 @@ Walker.prototype._dealDependency = function(dep, real, node, callback) {
       }
     };
 
-    if (this.options.allowCyclic) {
+    if (!this.options.allowCyclic) {
       return callback(message);
     } else {
       this.emit('warn', message);

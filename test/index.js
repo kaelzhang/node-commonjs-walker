@@ -29,6 +29,9 @@ var cases = [
   {
     desc: 'circular',
     file: 'circular/index.js',
+    options: {
+      allowCyclic: false
+    },
     expect: function (err, path, nodes, entry) {
       expect(err).not.to.equal(null);
       expect(err.code).to.equal('CYCLIC_DEPENDENCY');
@@ -37,7 +40,7 @@ var cases = [
   {
     desc: 'circular',
     options: {
-      detectCyclic: false
+      allowCyclic: true
     },
     file: 'circular/index.js',
     expect: function (err, path, nodes, entry) {
@@ -275,9 +278,9 @@ describe("walker()", function(){
         };
 
         if (noOptions) {
-          walker(file, callback);
+          walker(file, callback).walk();
         } else {
-          walker(file, options, callback);
+          walker(file, options, callback).walk();
         }
       });
     }
