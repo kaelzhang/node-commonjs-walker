@@ -9,6 +9,7 @@ var async = require('async');
 var fs = require('fs');
 var util = require('util');
 var resolve = require('resolve');
+var EE = require('events').EventEmitter;
 
 function walker (entry, options, callback) {
   options || (options = {});
@@ -36,7 +37,7 @@ function Walker (entry, options, callback) {
   this.entry = node_path.resolve(entry);
   this.options = options;
 
-  makeDefault(options, 'detectCyclic', true);
+  makeDefault(options, 'allowCyclic', true);
   makeDefault(options, 'strictRequire', true);
   makeDefault(options, 'allowAbsolutePath', true);
   makeDefault(options, 'extensions', EXTS_NODE);
@@ -46,9 +47,9 @@ function Walker (entry, options, callback) {
   }
 
   this.callback = callback;
-  this._walk();
 }
 
+util.inherits(Walker, EE);
 
 // Checks if the `options.extensions` is valid
 Walker.prototype._checkExts = function() {
@@ -64,7 +65,7 @@ Walker.prototype._checkExts = function() {
 };
 
 
-Walker.prototype._walk = function() {
+Walker.prototype.walk = function() {
   var self = this;
   var entry = this.entry;
 
@@ -152,15 +153,21 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
     async.each(dependencies, function (dep, done) {
       var origin = dep;
 
-      if (dep.indexOf('/') === 0 && !options.allowAbsolutePath) {
-        return done({
+      if (dep.indexOf('/') === 0) {
+        var message = {
           code: 'NOT_ALLOW_ABSOLUTE_PATH',
           message: 'Requiring an absolute path "' + dep + '" is not allowed in "' + path + '"',
           data: {
             dependency: dep,
             path: path
           }
-        });
+        };
+
+        if (!options.allowAbsolutePath) {
+          return done(); 
+        } else {
+          self.emit('warn', message);
+        }
       }
 
       if (!self._isRelativePath(dep)) {
@@ -245,20 +252,22 @@ Walker.prototype._dealDependency = function(dep, real, node, callback) {
   // 2. but assigned as a dependency of anothor node
   // If one of the ancestor dependents of `node` is `current`, it forms a circle.
   var circular_trace;
-  if (
-    this.options.detectCyclic 
-
-    // node -> sub_node
-    && (circular_trace = circular.trace(sub_node, node, this.nodes))
-  ) {
-    return callback({
+  // node -> sub_node
+  if (circular_trace = circular.trace(sub_node, node, this.nodes)) {
+    var message = {
       code: 'CYCLIC_DEPENDENCY',
       message: 'Cyclic dependency found: \n' + this._printCyclic(circular_trace),
       data: {
         trace: circular_trace,
         path: real
       }
-    });
+    };
+
+    if (this.options.allowCyclic) {
+      return callback(message);
+    } else {
+      this.emit('warn', message);
+    }
   }
   callback(null);
 };
@@ -274,6 +283,7 @@ Walker.prototype._createNode = function(id) {
 
   if (!node) {
     node = this.nodes[id] = {
+      id: id,
       dependents: [],
       entry: id === this.entry,
       foreign: this._isForeign(id)
