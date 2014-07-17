@@ -86,7 +86,7 @@ All options are optional. By default, `walker` works in a very strict mode.
 
 Option | Type | Default | Description
 ------ | ---- | ------- | ------------
-detectCyclic | `Boolean` | true | whether should check cyclic dependencies
+allowCyclic | `Boolean` | true | whether should check cyclic dependencies
 strictRequire | `Boolean` | true | whether should check the usage of method `require()`. If true, the argument of `require()` must be an literal string.
 allowAbsolutePath | `Boolean` | true | whether should allow to require an absolute path.
 extensions | `Array` | `['.js', '.json', '.node']` | see `options.extensions` section
@@ -112,7 +112,7 @@ Especially, only tree values below are allowed:
 
 ```js
 {
-  detectCyclic: true,
+  allowCyclic: false,
   strictRequire: true,
   allowAbsolutePath: false,
   extensions: ['.js', '.json']
