@@ -1,6 +1,6 @@
 {
   "name": "commonjs-walker",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "Analyzer and tree walker for commonjs.",
   "main": "index.js",
   "scripts": {
@@ -32,7 +32,7 @@
     "chai": "~1.8.0"
   },
   "dependencies": {
-    "async": "^0.8.0",
+    "async": "^0.9.0",
     "esprima": "^1.2.0",
     "resolve": "^0.7.1"
   }
