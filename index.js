@@ -6,6 +6,10 @@ var parser = require('./lib/parser');
 var circular = require('./lib/circular');
 var node_path = require('path');
 var async = require('async');
+var fs = require('fs');
+var util = require('util');
+var resolve = require('resolve');
+var EE = require('events').EventEmitter;
 
 function walker (entry, options, callback) {
   options || (options = {});
@@ -13,160 +17,259 @@ function walker (entry, options, callback) {
     options = {};
     callback = arguments[1];
   }
+  options['as'] || (options['as'] = {});
   return new Walker(entry, options, callback);
 }
 
+
+function makeDefault (object, key, value) {
+  object[key] = key in object
+    ? object[key]
+    : value
+}
+
+
+// [ref](http://nodejs.org/api/modules.html#modules_file_modules)
+var EXTS_NODE = ['.js', '.json', '.node'];
 
 function Walker (entry, options, callback) {
   this.nodes = {};
   this.entry = node_path.resolve(entry);
   this.options = options;
 
+  makeDefault(options, 'allowCyclic', true);
+  makeDefault(options, 'strictRequire', true);
+  makeDefault(options, 'allowAbsolutePath', true);
+  makeDefault(options, 'extensions', EXTS_NODE);
+
+  if (!this._checkExts()) {
+    throw new Error('Invalid value of `options.extensions`');
+  }
+
   this.callback = callback;
-  this._walk();
 }
 
+util.inherits(Walker, EE);
 
-Walker.prototype._walk = function() {
+// Checks if the `options.extensions` is valid
+Walker.prototype._checkExts = function() {
+  var exts = this.options.extensions;
+
+  if (!util.isArray(exts)) {
+    return false;
+  }
+
+  return exts.every(function (ext, i) {
+    return ext === EXTS_NODE[i];
+  });
+};
+
+
+Walker.prototype.walk = function() {
   var self = this;
   var entry = this.entry;
-  var called;
 
-  function cb (err, tree) {
+  var called;
+  function cb (err) {
     if (called) {
       return;
     }
+    called = true;
 
     if (err) {
       return self.callback(err);
     }
-
     // Returns the node of the entry point
-    self.callback(null, self._getNode(entry), self.nodes);
+    self.callback(null, self.nodes);
   }
 
   var err;
   var q = async.queue(function (task, done) {
-    // Each node must be created before `._parseFile()`
-    self._parseFile(task.path, function (err, data) {
+    // `path` will always be an absolute path.
+    var path = task.path;
+    // Each node must be created before `._parseFileDependencies()`
+    self._parseFileDependencies(path, function (err) {
       if (err) {
-        cb(err);
-        return done();
+        return cb(err);
       }
-
-      self._dealDependencies(data, function (err) {
-        if (err) {
-          cb(err);
-        }
-
-        done();
-      });
+      done();
     });
   });
 
-  q.drain = cb;
-
   // Creates entry node
+  // `node` should be created before the task is running.
   this._createNode(entry);
+  q.drain = cb;
   // Adds initial task
   q.push({
     path: entry
   });
-
   this.queue = q;
 };
 
 
-Walker.prototype._parseFile = function(path, callback) {
+// Actually, we do nothing
+Walker.prototype._parseNodeFile = function(path, callback) {
+  this._parseJsonFile(path, callback);
+};
+
+
+// @param {Path} path Absolute path
+Walker.prototype._parseJsonFile = function(path, callback) {
   var self = this;
+  parser.read(path, function (err, content) {
+    if (err) {
+      return callback(err);
+    }
 
-  parser.parse(path, {
-    noStrictRequire: this.options.noStrictRequire
-
-  }, callback);
+    var node = self._getNode(path);
+    node.code = content;
+    node.dependencies = {};
+    callback(null);
+  });
 };
 
 
-Walker.prototype._ensureExt = function(path, ext) {
-  var regex = new RegExp('\\.' + ext + '$', 'i');
-
-  if (!regex.test(path)) {
-    path += '.' + ext;
-  }
-
-  return path;
-};
-
-
-Walker.prototype._dealDependencies = function(data, callback) {
-  var dependencies = data.dependencies;
-  var path = data.path;
+Walker.prototype._parseFileDependencies = function(path, callback) {
   var node = this._getNode(path);
-
-  node.unsolvedDependencies = dependencies;
-  node.dependencies = [];
-  node.code = data.code;
-
-  var self = this;
   var options = this.options;
-  async.each(dependencies, function (dep, done) {
-    // './foo'
-    if (self._isRelativePath(dep)) {
-      dep = node_path.join(node_path.dirname(path), dep);
-      dep = self._ensureExt(dep, 'js');
-    }
+  var self = this;
+  parser.parse(path, {
+    strictRequire: this.options.strictRequire
 
-    var sub_node = self._getNode(dep);
-
-    if (sub_node) {
-
-      // We only check the node if it meets the conditions below:
-      // 1. already exists: all new nodes are innocent.
-      // 2. but assigned as a dependency of anothor node
-
-      // If one of the ancestor dependents of `node` is `current`, it forms a circle.
-      var circular_trace = circular.trace(node, sub_node);
-      if (circular_trace && !options.noCheckCircular) {
-        return done({
-          code: 'ECIRCULAR',
-          message: 'Circular dependency found: \n' + self._printCircular(circular_trace),
-          data: {
-            trace: circular_trace,
-            path: dep
-          }
-        });
-      }
-
-      self._addDependent(node, sub_node);
-
-      // If sub node is already exists, skip parsing.
-      return done(null);
-    }
-
-    sub_node = self._createNode(dep);
-    self._addDependent(node, sub_node);
-
-    if (sub_node.isForeign) {
-      // We do NOT parse foreign modules
-      return done(null);
+  // @param {Object} data
+  // - code
+  // - path
+  // - dependencies
+  }, function (err, data) {
+    if (err) {
+      return callback(err);
     }
     
-    self.queue.push({
-      path: dep
-    });
+    node.code = data.code;
+    node.dependencies = {};
 
-    done(null);
+    var dependencies = data.dependencies;
+    async.each(dependencies, function (dep, done) {
+      var origin = dep;
 
-  }, callback);
+      if (dep.indexOf('/') === 0) {
+        var message = {
+          code: 'NOT_ALLOW_ABSOLUTE_PATH',
+          message: 'Requiring an absolute path "' + dep + '" is not allowed in "' + path + '"',
+          data: {
+            dependency: dep,
+            path: path
+          }
+        };
+
+        if (!options.allowAbsolutePath) {
+          return done(); 
+        } else {
+          self.emit('warn', message);
+        }
+      }
+
+      if (!self._isRelativePath(dep)) {
+        // we only map top level id for now
+        dep = self._solveAliasedDependency(options['as'][dep], path) || dep;
+      }
+
+      // package name, not a path
+      if (!self._isRelativePath(dep)) {
+        return self._dealDependency(origin, dep, node, done);
+      }
+
+      resolve(dep, {
+        basedir: node_path.dirname(path),
+        extensions: options.extensions
+      }, function (err, real) {
+        if (err) {
+          return done({
+            code: 'MODULE_NOT_FOUND',
+            message: err.message,
+            stack: err.stack,
+            data: {
+              path: dep
+            }
+          });
+        }
+
+        self._dealDependency(origin, real, node, done);
+      });
+    }, callback);
+  });
 };
 
 
-Walker.prototype._addDependent = function(dependent, dependency) {
-  if (!~dependency.dependents.indexOf(dependent)) {
-    dependency.dependents.push(dependent);
+// #17
+// If we define an `as` field in cortex.json
+// {
+//   "as": {
+//     "abc": './abc.js' // ./abc.js is relative to the root directory 
+//   }
+// }
+// @param {String} dep path of dependency
+// @param {String} env_path the path of the current file
+Walker.prototype._solveAliasedDependency = function(dep, env_path) {
+  var cwd = this.options.cwd;
+
+  if (!dep || !cwd || !this._isRelativePath(dep)) {
+    return dep;
   }
 
-  dependent.dependencies.push(dependency);
+  dep = node_path.join(cwd, dep);
+  dep = node_path.relative(node_path.dirname(env_path), dep)
+    // After join and relative, dep will contains `node_path.sep` which varies from operating system,
+    // so normalize it
+    .replace(/\\/g, '/');
+
+  if (!~dep.indexOf('..')) {
+    // 'abc.js' -> './abc.js'
+    dep = './' + dep;
+  }
+
+  return dep;
+};
+
+
+Walker.prototype._dealDependency = function(dep, real, node, callback) {
+  node.dependencies[dep] = real;
+  var sub_node = this._getNode(real);
+  if (!sub_node) {
+    sub_node = this._createNode(real);
+    if (!sub_node.foreign) {
+      // only if the node is newly created.
+      this.queue.push({
+        path: real
+      });
+    }
+    return callback(null);
+  }
+
+  // We only check the node if it meets the conditions below:
+  // 1. already exists: all new nodes are innocent.
+  // 2. but assigned as a dependency of anothor node
+  // If one of the ancestor dependents of `node` is `current`, it forms a circle.
+  var circular_trace;
+  // node -> sub_node
+  if (circular_trace = circular.trace(sub_node, node, this.nodes)) {
+    var message = {
+      code: 'CYCLIC_DEPENDENCY',
+      message: 'Cyclic dependency found: \n' + this._printCyclic(circular_trace),
+      data: {
+        trace: circular_trace,
+        path: real
+      }
+    };
+
+    if (!this.options.allowCyclic) {
+      return callback(message);
+    } else {
+      this.emit('warn', message);
+    }
+  }
+  callback(null);
 };
 
 
@@ -181,20 +284,17 @@ Walker.prototype._createNode = function(id) {
   if (!node) {
     node = this.nodes[id] = {
       id: id,
-      dependents: []
-      // version will be set later
+      dependents: [],
+      entry: id === this.entry,
+      foreign: this._isForeign(id)
     };
-
-    if (id === this.entry) {
-      node.isEntryPoint = true;
-    }
-
-    if (!this._isAbsolutePath(id)) {
-      node.isForeign = true;
-    }
   }
-
   return node;
+};
+
+
+Walker.prototype._isForeign = function(path) {
+  return !this._isAbsolutePath(path);
 };
 
 
@@ -203,11 +303,12 @@ Walker.prototype._isAbsolutePath = function(path) {
 };
 
 
-Walker.prototype._isRelativePath = function(dep) {
-  // 'abc' -> true
-  // './abc' -> false
-  // '../abc' -> false
-  return dep.indexOf('./') === 0 || dep.indexOf('../') === 0;
+Walker.prototype._isRelativePath = function(path) {
+  // Actually, this method is called after the parser.js,
+  // and all paths are parsed from require(foo),
+  // so `foo` will never be affected by windows,
+  // so we should not use `'.' + node_path.sep` to test these paths
+  return path.indexOf('./') === 0 || path.indexOf('../') === 0;
 };
 
 
@@ -219,20 +320,17 @@ Walker.prototype._getNode = function(path) {
 // 1. <path>
 // 2. <path>
 // 
-Walker.prototype._printCircular = function(trace) {
+Walker.prototype._printCyclic = function(trace) {
   var list = trace.map(function (node, index) {
-    return index + 1 + ': ' + node.path;
+    return index + 1 + ': ' + node.id;
   });
-
   list.pop();
 
   var flow = trace.map(function (node, index) {
     ++ index;
-
     return index === 1 || index === trace.length
       ? '[1]'
       : index;
-
   });
 
   return list.join('\n') + '\n\n' + flow.join(' -> ');

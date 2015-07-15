@@ -1,29 +1,24 @@
 {
   "name": "commonjs-walker",
-  "version": "1.0.0",
+  "version": "5.0.2",
   "description": "Analyzer and tree walker for commonjs.",
   "main": "index.js",
   "scripts": {
     "test": "make test"
   },
   "keywords": [
-    "commonjs-walker",
-    "analyzer",
     "commonjs",
-    "dependencies",
-    "parser",
     "walker",
-    "tree",
+    "parser",
+    "module",
+    "dependencies",
     "require",
-    "npm"
+    "resolve"
   ],
   "repository": {
     "type": "git",
     "url": "git@github.com:kaelzhang/node-commonjs-walker.git"
   },
-  "keywords": [
-    "commonjs-walker"
-  ],
   "engines": {
     "node": ">=0.8.0"
   },
@@ -37,7 +32,8 @@
     "chai": "~1.8.0"
   },
   "dependencies": {
+    "async": "^0.9.0",
     "esprima": "^1.2.0",
-    "async": "^0.8.0"
+    "resolve": "^0.7.1"
   }
 }

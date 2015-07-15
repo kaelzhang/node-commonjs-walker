@@ -1,0 +1,1 @@
+require('./cases/no-fallback');

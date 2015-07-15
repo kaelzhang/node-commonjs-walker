@@ -9,33 +9,49 @@ var cases = [
   {
     desc: 'could get dependencies',
     file: 'correct.js',
+    options: {
+      strictRequire: true
+    },
     deps: ['../abc', 'abc', './abc']
-
-  }, {
+  }, 
+  {
     desc: 'no arguments, strict',
     file: 'no-arg.js',
+    options: {
+      strictRequire: true
+    },
     error: true
-
-  }, {
+  }, 
+  {
     desc: 'no arguments, no strict',
     file: 'no-arg.js',
     options: {
-      noStrictRequire: true
+      strictRequire: false
     },
     deps: ['abc']
   
-  }, {
+  }, 
+  {
     desc: 'more than one arguments, strict',
     file: 'more-than-one-arg.js',
+    options: {
+      strictRequire: true
+    },
     error: true
 
-  }, {
+  }, 
+  {
     desc: 'more than one arguments, no strict',
     file: 'more-than-one-arg.js',
     options: {
-      noStrictRequire: true
+      strictRequire: false
     },
     deps: ['../abc', './abc']
+  },
+  {
+    desc: 'parsing a json file will not fail',
+    file: 'json.json',
+    deps: []
   }
 ];
 
