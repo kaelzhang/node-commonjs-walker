@@ -4,6 +4,7 @@ module.exports = walker;
 
 var parser = require('./lib/parser');
 var circular = require('./lib/circular');
+var _ = require('underscore');
 var node_path = require('path');
 var async = require('async');
 var fs = require('fs');
@@ -46,10 +47,49 @@ function Walker (entry, options, callback) {
     throw new Error('Invalid value of `options.extensions`');
   }
 
+  this.loaders = this.initLoaders(options.loaders);
   this.callback = callback;
 }
 
 util.inherits(Walker, EE);
+
+Walker.prototype.initLoaders = function(loaders){
+  var cwd = this.options.cwd;
+  loaders = loaders.concat([{
+    test: /\.js$/,
+    loader: 'commonjs-loader'
+  }, {
+    test: /\.json$/,
+    loader: 'json-loader'
+  }]);
+
+  return loaders.map(function(loaderConfig){
+    var loaderName = loaderConfig.loader;
+    var builtInPath = node_path.join(__dirname, 'lib', 'loaders', loaderName);
+    var localPath = node_path.join(cwd, 'node_modules', loaderName);
+    var loaderFn;
+    
+    var paths = [builtInPath, localPath, loaderName];
+    var err;
+    for(var i = 0; i < paths.length; i++){
+      try{
+        loaderFn = require(paths[i]);
+        err = null;
+        if(loaderFn){break;}
+      }catch(e){
+        err = e;
+      }
+    }
+
+    if(err){
+      throw err;
+    }
+
+    return _.extend({
+      loaderFn: loaderFn
+    }, loaderConfig);
+  })
+}
 
 // Checks if the `options.extensions` is valid
 Walker.prototype._checkExts = function() {
@@ -107,34 +147,73 @@ Walker.prototype.walk = function() {
   this.queue = q;
 };
 
+Walker.prototype.parse = function(path, options, callback) {
 
-// Actually, we do nothing
-Walker.prototype._parseNodeFile = function(path, callback) {
-  this._parseJsonFile(path, callback);
+  var LoaderContext = require('./lib/loader-context');
+  var loaders = this.loaders;
+  var self = this; 
+  for(var i = 0; i < loaders.length; i++){
+    (function(j){
+      var loader, context, result, readOption = {};
+      loader = loaders[j];
+      if(loader.test.test(path)){
+        context = new LoaderContext();
+        self.read(path, readOption, function(err, content){
+          context.run({
+            path: path,
+            source: content,
+            loaderFn: loader.loaderFn
+          }, function(err, result){
+            if(err){return callback(err);}
+
+            callback(null, {
+              code: result,
+              path: path,
+              dependencies: context.getDependencies()
+            });
+          });
+        });
+      }
+    })(i);
+  }
 };
 
-
-// @param {Path} path Absolute path
-Walker.prototype._parseJsonFile = function(path, callback) {
-  var self = this;
-  parser.read(path, function (err, content) {
-    if (err) {
-      return callback(err);
-    }
-
-    var node = self._getNode(path);
-    node.code = content;
-    node.dependencies = {};
-    callback(null);
+Walker.prototype.read = function(path, options, callback){
+  options = options || {};
+  var raw = options.raw;
+  fs.readFile(path, {
+    encoding: raw ? null : 'utf8'
+  }, function (err, content) {
+    callback(err, content);
   });
 };
+// Actually, we do nothing
+// Walker.prototype._parseNodeFile = function(path, callback) {
+//   this._parseJsonFile(path, callback);
+// };
+
+
+// // @param {Path} path Absolute path
+// Walker.prototype._parseJsonFile = function(path, callback) {
+//   var self = this;
+//   parser.read(path, function (err, content) {
+//     if (err) {
+//       return callback(err);
+//     }
+
+//     var node = self._getNode(path);
+//     node.code = content;
+//     node.dependencies = {};
+//     callback(null);
+//   });
+// };
 
 
 Walker.prototype._parseFileDependencies = function(path, callback) {
   var node = this._getNode(path);
   var options = this.options;
   var self = this;
-  parser.parse(path, {
+  self.parse(path, {
     strictRequire: this.options.strictRequire
 
   // @param {Object} data

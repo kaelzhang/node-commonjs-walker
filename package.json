@@ -1,5 +1,5 @@
 {
-  "name": "commonjs-walker",
+  "name": "cortex-commonjs-walker",
   "version": "5.0.2",
   "description": "Analyzer and tree walker for commonjs.",
   "main": "index.js",
@@ -17,7 +17,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:kaelzhang/node-commonjs-walker.git"
+    "url": "git@github.com:cortexjs/cortex-commonjs-walker.git"
   },
   "engines": {
     "node": ">=0.8.0"
@@ -25,7 +25,7 @@
   "author": "kael",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kaelzhang/node-commonjs-walker/issues"
+    "url": "https://github.com/cortexjs/cortex-commonjs-walker/issues"
   },
   "devDependencies": {
     "mocha": "~1.13.0",
@@ -34,6 +34,7 @@
   "dependencies": {
     "async": "^0.9.0",
     "esprima": "^1.2.0",
-    "resolve": "^0.7.1"
+    "resolve": "^0.7.1",
+    "underscore": "^1.8.3"
   }
 }
