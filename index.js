@@ -47,14 +47,25 @@ function Walker (entry, options, callback) {
     throw new Error('Invalid value of `options.extensions`');
   }
 
-  this.loaders = this.initLoaders(options.loaders);
+  try{
+    this.loaders = this.initLoaders(options.loaders);
+  }catch(e){
+    return callback(e);
+  }
   this.callback = callback;
 }
 
 util.inherits(Walker, EE);
 
+Walker.prototype.splitQuery = function(req) {
+  var i = req.indexOf("?");
+  if(i < 0) return [req, ""];
+  return [req.substr(0, i), req.substr(i)];
+};
+
 Walker.prototype.initLoaders = function(loaders){
   var cwd = this.options.cwd;
+  var self = this;
   loaders = loaders.concat([{
     test: /\.js$/,
     loader: 'commonjs-loader'
@@ -64,32 +75,54 @@ Walker.prototype.initLoaders = function(loaders){
   }]);
 
   return loaders.map(function(loaderConfig){
-    var loaderName = loaderConfig.loader;
-    var builtInPath = node_path.join(__dirname, 'lib', 'loaders', loaderName);
-    var localPath = node_path.join(cwd, 'node_modules', loaderName);
-    var loaderFn;
-    
-    var paths = [builtInPath, localPath, loaderName];
-    var err;
-    for(var i = 0; i < paths.length; i++){
-      try{
-        loaderFn = require(paths[i]);
-        err = null;
-        if(loaderFn){break;}
-      }catch(e){
-        err = e;
+    var loaderFnArr = [];
+    var loadersArr = [];
+    loaderConfig.loader = loaderConfig.loader.split('!');
+    for (var j = 0; j < loaderConfig.loader.length; j++) {
+      var l = self.splitQuery(loaderConfig.loader[j]);
+      loadersArr.push({
+        request: loaderConfig.loader[j],
+        path: l[0],
+        query: l[1],
+        module: null
+      });
+      var loaderName = l[0];
+      var builtInPath = node_path.join(__dirname, 'lib', 'loaders', loaderName);
+      var localPath = node_path.join(cwd, 'node_modules', loaderName);
+      var loaderPath = node_path.join(cwd, '..', '..', '..', '..', 'node_modules', loaderName);
+      var loaderFn;
+
+      var paths = [builtInPath, localPath, loaderPath, loaderName];
+      var err;
+      for(var i = 0; i < paths.length; i++){
+        try{
+          loaderFn = require(paths[i]);
+          err = null;
+          if(loaderFn){
+            loaderFnArr.push(loaderFn);
+            break;
+          }
+        }catch(e){
+          if(e.code == 'MODULE_NOT_FOUND'){
+            continue;
+          }else{
+            err = e;
+            break;
+          }
+        }
+      }
+
+      if(err){
+        throw err;
       }
     }
 
-    if(err){
-      throw err;
-    }
-
     return _.extend({
-      loaderFn: loaderFn
+      loaderFn: loaderFnArr,
+      loaders: loadersArr
     }, loaderConfig);
   })
-}
+};
 
 // Checks if the `options.extensions` is valid
 Walker.prototype._checkExts = function() {
@@ -148,28 +181,30 @@ Walker.prototype.walk = function() {
 };
 
 Walker.prototype.parse = function(path, options, callback) {
-
   var LoaderContext = require('./lib/loader-context');
   var loaders = this.loaders;
-  var self = this; 
+  var self = this;
   for(var i = 0; i < loaders.length; i++){
     (function(j){
-      var loader, context, result, readOption = {};
+      var loader, loaderCtx, result, readOption = {};
       loader = loaders[j];
       if(loader.test.test(path)){
-        context = new LoaderContext();
+        loaderCtx = new LoaderContext();
         self.read(path, readOption, function(err, content){
-          context.run({
-            path: path,
+          loaderCtx.run({
+            resource: path,
+            resourcePath: self.splitQuery(path)[0],
+            resourceQuery: path ? self.splitQuery(path)[1] || null : undefined,
             source: content,
-            loaderFn: loader.loaderFn
+            loaderFn: loader.loaderFn,
+            context: node_path.dirname(path),
+            loaders: loader.loaders
           }, function(err, result){
             if(err){return callback(err);}
-
             callback(null, {
               code: result,
               path: path,
-              dependencies: context.getDependencies()
+              dependencies: loaderCtx.getDependencies()
             });
           });
         });
@@ -224,11 +259,11 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
     if (err) {
       return callback(err);
     }
-    
     node.code = data.code;
     node.dependencies = {};
 
     var dependencies = data.dependencies;
+
     async.each(dependencies, function (dep, done) {
       var origin = dep;
 
@@ -243,7 +278,7 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
         };
 
         if (!options.allowAbsolutePath) {
-          return done(); 
+          return done();
         } else {
           self.emit('warn', message);
         }
@@ -285,7 +320,7 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
 // If we define an `as` field in cortex.json
 // {
 //   "as": {
-//     "abc": './abc.js' // ./abc.js is relative to the root directory 
+//     "abc": './abc.js' // ./abc.js is relative to the root directory
 //   }
 // }
 // @param {String} dep path of dependency
@@ -354,7 +389,7 @@ Walker.prototype._dealDependency = function(dep, real, node, callback) {
 
 // Creates the node by id if not exists.
 // No fault tolerance for the sake of private method
-// @param {string} id 
+// @param {string} id
 // - `path` must be absolute path if is a relative module
 // - package name for foreign module
 Walker.prototype._createNode = function(id) {
@@ -398,7 +433,7 @@ Walker.prototype._getNode = function(path) {
 
 // 1. <path>
 // 2. <path>
-// 
+//
 Walker.prototype._printCyclic = function(trace) {
   var list = trace.map(function (node, index) {
     return index + 1 + ': ' + node.id;
