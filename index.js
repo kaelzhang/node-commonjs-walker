@@ -65,6 +65,7 @@ Walker.prototype.splitQuery = function(req) {
 
 Walker.prototype.initLoaders = function(loaders){
   var cwd = this.options.cwd;
+  var loader_version = this.options.loader_version;
   var self = this;
   loaders = loaders.concat([{
     test: /\.js$/,
@@ -89,10 +90,10 @@ Walker.prototype.initLoaders = function(loaders){
       var loaderName = l[0];
       var builtInPath = node_path.join(__dirname, 'lib', 'loaders', loaderName);
       var localPath = node_path.join(cwd, 'node_modules', loaderName);
-      var loaderPath = node_path.join(cwd, '..', '..', '..', '..', 'node_modules', loaderName);
+      var loaderPath = loader_version[loaderName] || loaderName;
       var loaderFn;
 
-      var paths = [builtInPath, localPath, loaderPath, loaderName];
+      var paths = [builtInPath, localPath, loaderPath];
       var err;
       for(var i = 0; i < paths.length; i++){
         try{
