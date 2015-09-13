@@ -173,6 +173,7 @@ Walker.prototype.walk = function() {
   // Creates entry node
   // `node` should be created before the task is running.
   this._createNode(entry);
+  this.emit('dependency', entry, entry);
   q.drain = cb;
   // Adds initial task
   q.push({
@@ -350,6 +351,7 @@ Walker.prototype._solveAliasedDependency = function(dep, env_path) {
 
 Walker.prototype._dealDependency = function(dep, real, node, callback) {
   node.dependencies[dep] = real;
+  this.emit('dependency', real, node.id);
   var sub_node = this._getNode(real);
   if (!sub_node) {
     sub_node = this._createNode(real);
