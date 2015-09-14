@@ -196,11 +196,8 @@ Walker.prototype.parse = function(path, options, callback) {
           loaderCtx.run({
             resource: path,
             resourcePath: self.splitQuery(path)[0],
-            resourceQuery: path ? self.splitQuery(path)[1] || null : undefined,
             source: content,
-            loaderFn: loader.loaderFn,
-            context: node_path.dirname(path),
-            loaders: loader.loaders
+            loaderFn: loader.loaderFn
           }, function(err, result){
             if(err){return callback(err);}
             callback(null, {
