@@ -36,6 +36,7 @@ If the file structure of your project is (actually it is a very extreme scenario
 ```
 /path/to
        |-- index.js
+       |-- a.png
        |-- a
            |-- index.json
 ```
@@ -45,6 +46,7 @@ index.js:
 ```js
 require('./a');
 require('b');
+var image = require.resolve('./a.png')
 ```
 
 a/index.json
@@ -67,15 +69,19 @@ Then, the `nodes` object will be something like:
 {
   '/path/to/index.js': {
     entry: true,
-    dependencies: {
+    require: {
       './a': '/path/to/a/index.json',
       'b': 'b'
     },
-    code: <Buffer>
+    resolve: {
+      './a.png': '/path/to/a.png'
+    }
   },
+  '/path/to/a.png': {
+    require: {}
+  }
   '/path/to/a/index.json': {
-    dependencies: {},
-    code: <Buffer>
+    require: {}
   },
   'b': {
     foreign: true
@@ -136,15 +142,10 @@ Property | Type | Description
 -------- | ---- | -----------
 entry | `Boolean` | whether the current module is the entry point
 foreign | `Boolean` | whether the current module is from a foreign package.
+require | `Object` |
+resolve | `Object` |
+async   | `Object` |
 
-<!-- dependents   | `Array.<String>` | the dependent modules. If there's no dependents, it will be `[]` -->
-
-#### If `foreign` is `false`
-
-Property | Type | Description
--------- | ---- | -----------
-code | `Buffer` | the file content of the current module.
-dependencies | `Object.<id: path>` | `id` is the argument of `require(id)`. `path` is the resolved absolute path by `id`. If the module has no dependencies, it will be `{}`
 
 ## Class: walker.Error
 
