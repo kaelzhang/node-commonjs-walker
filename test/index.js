@@ -22,7 +22,7 @@ var cases = [
     file: 'one-dep/index.js',
     expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
-      var dep = entry.dependencies['./a'];
+      var dep = entry.require['./a'];
       expect(dep).to.equal( node_path.join(root, 'one-dep', 'a.js') );
     }
   },

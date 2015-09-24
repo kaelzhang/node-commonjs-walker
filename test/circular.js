@@ -30,7 +30,7 @@ describe("circular.trace()", function(){
   it("a longer link, but no match", function(){
     var a = {};
     var b = {
-      dependencies: {
+      require: {
         './c': '/c'
       }
     };
@@ -38,7 +38,7 @@ describe("circular.trace()", function(){
       '/a': a,
       '/b': b,
       '/c': {
-        dependencies: {}
+        require: {}
       }
     };
 
@@ -52,14 +52,14 @@ describe("circular.trace()", function(){
     };
     var b = {
       name: 'b',
-      dependencies: {
+      require: {
         './c': '/c',
         './e': '/e'
       }
     };
     var c = {
       name: 'c',
-      dependencies: {
+      require: {
         './d': '/d',
         './a': '/a'
       }
