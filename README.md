@@ -90,8 +90,11 @@ All options are optional. By default, `walker` works in a very strict mode.
 Option | Type | Default | Description
 ------ | ---- | ------- | ------------
 allow_cyclic | `Boolean` | true | whether should check cyclic dependencies
-strict_require | `Boolean` | false | whether should check the usage of method `require()`. If true, the argument of `require()` must be an literal string.
-comment_require | `Boolean` | true | 
+check_require_length | `Boolean` | false | whether should check the `arguments.length` of method `require()`
+allow_non_literal_require | `Boolean` | true | whether should check the usage of method `require()`. If false, the argument of `require()` must be an literal string.
+comment_require | `Boolean` | true | whether should parse `@require()`, `@require.resolve` and `@require.async` in comments.
+require_resolve | `Boolean` | true | whether should analysis the usage of `require.resolve()`.
+require_async | `Boolean` | true | whether should record the usage of `require.async()`.
 allow_absolute_path | `Boolean` | true | whether should allow to require an absolute path.
 extensions | `Array` | `['.js', '.json', '.node']` | see `options.extensions` section
 as | `Object` | `{}` | An object map that define the alias of the parameter of `require`
