@@ -10,7 +10,7 @@ var cases = [
     desc: 'could get dependencies',
     file: 'correct.js',
     options: {
-      strict_require: true
+      check_require_length: true
     },
     deps: ['../abc', 'abc', './abc']
   }, 
@@ -18,7 +18,7 @@ var cases = [
     desc: 'no arguments, strict',
     file: 'no-arg.js',
     options: {
-      strict_require: true
+      check_require_length: true
     },
     error: true
   }, 
@@ -26,16 +26,14 @@ var cases = [
     desc: 'no arguments, no strict',
     file: 'no-arg.js',
     options: {
-      strict_require: false
     },
     deps: ['abc']
-  
   }, 
   {
     desc: 'more than one arguments, strict',
     file: 'more-than-one-arg.js',
     options: {
-      strict_require: true
+      check_require_length: true
     },
     error: true
 
@@ -44,7 +42,6 @@ var cases = [
     desc: 'more than one arguments, no strict',
     file: 'more-than-one-arg.js',
     options: {
-      strict_require: false
     },
     deps: ['../abc', './abc']
   },
@@ -63,7 +60,7 @@ describe("parser.parse()", function(){
         done();
         expect(!err).to.equal(!c.error); 
         if (util.isArray(c.deps)) {
-          expect(result.dependencies.sort()).to.deep.equal(c.deps.sort());
+          expect(result.require.sort()).to.deep.equal(c.deps.sort());
         }
       });
     });

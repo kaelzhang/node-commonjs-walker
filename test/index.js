@@ -87,6 +87,9 @@ var cases = [
   {
     desc: 'error require',
     file: 'error-require/a.js',
+    options: {
+      check_require_length: true
+    },
     expect: function (err, path, nodes, entry) {
       expect(err).to.not.equal(null);
       expect(err.code).to.equal('WRONG_USAGE_REQUIRE');
@@ -99,7 +102,7 @@ var cases = [
       expect(err).to.equal(null);
       var dep = './cases/no-fallback';
       var real = node_path.join( node_path.dirname(path), dep );
-      expect(entry.dependencies[dep]).to.equal(real);
+      expect(entry.require[dep]).to.equal(real);
     }
   },
   {
@@ -116,7 +119,7 @@ var cases = [
       expect(err).to.equal(null);
       var dep = './cases/fallback';
       var real = node_path.join( node_path.dirname(path), dep ) + '.js';
-      expect(entry.dependencies[dep]).to.equal(real);
+      expect(entry.require[dep]).to.equal(real);
     }
   },
   {
@@ -126,7 +129,7 @@ var cases = [
       expect(err).to.equal(null);
       var dep = './cases/fallback.js';
       var real = node_path.join( node_path.dirname(path), dep );
-      expect(entry.dependencies[dep]).to.equal(real);
+      expect(entry.require[dep]).to.equal(real);
     }
   },
   {
@@ -136,7 +139,7 @@ var cases = [
       expect(err).to.equal(null);
       var dep = './cases/fallback-json';
       var real = node_path.join( node_path.dirname(path), dep ) + '.json';
-      expect(entry.dependencies[dep]).to.equal(real);
+      expect(entry.require[dep]).to.equal(real);
     }
   },
   {
@@ -148,7 +151,7 @@ var cases = [
       expect(err).to.equal(null);
       var dep = './cases/fallback-node';
       var real = node_path.join( node_path.dirname(path), dep ) + '.node';
-      expect(entry.dependencies[dep]).to.equal(real);
+      expect(entry.require[dep]).to.equal(real);
     }
   },
   {
@@ -171,7 +174,7 @@ var cases = [
       expect(err).to.equal(null);
       var dep = './cases/dir';
       var real = node_path.join( node_path.dirname(path), dep ) + node_path.sep + 'index.js';
-      expect(entry.dependencies[dep]).to.equal(real);
+      expect(entry.require[dep]).to.equal(real);
     }
   },
   {
@@ -183,7 +186,7 @@ var cases = [
       expect(err).to.equal(null);
       var dep = './cases/dir/';
       var real = node_path.join( node_path.dirname(path), dep ) + 'index.js';
-      expect(entry.dependencies[dep]).to.equal(real);
+      expect(entry.require[dep]).to.equal(real);
     }
   },
   {
@@ -213,8 +216,8 @@ var cases = [
     expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
       var a = node_path.join( node_path.dirname(path), 'a.js' );
-      expect('a' in entry.dependencies).to.equal(true);
-      expect(entry.dependencies['a']).to.equal(a);
+      expect('a' in entry.require).to.equal(true);
+      expect(entry.require['a']).to.equal(a);
     }
   },
   {
@@ -227,7 +230,7 @@ var cases = [
     file: 'as/foreign.js',
     expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
-      expect(entry.dependencies['a']).to.equal('b');
+      expect(entry.require['a']).to.equal('b');
     }
   },
   {
@@ -241,7 +244,7 @@ var cases = [
     file: 'as/deep/index.js',
     expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
-      expect(entry.dependencies['abc']).to.equal(node_path.join(node_path.dirname(path), './dep.js'));
+      expect(entry.require['abc']).to.equal(node_path.join(node_path.dirname(path), './dep.js'));
     }
   }
 ];
