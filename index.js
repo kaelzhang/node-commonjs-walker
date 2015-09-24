@@ -126,7 +126,7 @@ Walker.prototype._parse_json_file = function(path, callback) {
     }
 
     var node = self._get_node(path);
-    node.code = content;
+    // node.code = content;
     node.dependencies = {};
     callback(null);
   });
@@ -137,71 +137,75 @@ Walker.prototype._parse_file_dependencies = function(path, callback) {
   var node = this._get_node(path);
   var options = this.options;
   var self = this;
-  parser.parse(path, {
-    strict_require: this.options.strict_require
-
-  // @param {Object} data
-  // - code
-  // - path
-  // - dependencies
-  }, function (err, data) {
+  parser.parse(path, this.options, function (err, data) {
     if (err) {
       return callback(err);
     }
     
     node.code = data.code;
-    node.dependencies = {};
+    node.require = {};
+    node.resolve = {};
+    node.async = {};
 
-    var dependencies = data.dependencies;
-    async.each(dependencies, function (dep, done) {
-      var origin = dep;
-
-      if (dep.indexOf('/') === 0) {
-        var message = {
-          code: 'NOT_ALLOW_ABSOLUTE_PATH',
-          message: 'Requiring an absolute path "' + dep + '" is not allowed in "' + path + '"',
-          data: {
-            dependency: dep,
-            path: path
-          }
-        };
-
-        if (!options.allow_absolute_path) {
-          return done(); 
-        } else {
-          self.emit('warn', message);
-        }
-      }
-
-      if (!self._is_relative_path(dep)) {
-        // we only map top level id for now
-        dep = self._solve_aliased_dependency(options['as'][dep], path) || dep;
-      }
-
-      // package name, not a path
-      if (!self._is_relative_path(dep)) {
-        return self._deal_dependency(origin, dep, node, done);
-      }
-
-      resolve(dep, {
-        basedir: node_path.dirname(path),
-        extensions: options.extensions
-      }, function (err, real) {
-        if (err) {
-          return done({
-            code: 'MODULE_NOT_FOUND',
-            message: err.message,
-            stack: err.stack,
-            data: {
-              path: dep
-            }
-          });
-        }
-
-        self._deal_dependency(origin, real, node, done);
-      });
+    async.each(['require', 'resolve', 'async'], function (type, done) {
+      self._parse_dependencies_by_type(path, data[type], type, done);
     }, callback);
   });
+};
+
+
+Walker.prototype._parse_dependencies_by_type = function(path, paths, type, callback) {
+  var self = this;
+  var options = this.options;
+  var node = this._get_node(path);
+  async.each(paths, function (dep, done) {
+    var origin = dep;
+
+    if (dep.indexOf('/') === 0) {
+      var message = {
+        code: 'NOT_ALLOW_ABSOLUTE_PATH',
+        message: 'Requiring an absolute path "' + dep + '" is not allowed in "' + path + '"',
+        data: {
+          dependency: dep,
+          path: path
+        }
+      };
+
+      if (!options.allow_absolute_path) {
+        return done();
+      } else {
+        self.emit('warn', message);
+      }
+    }
+
+    if (!self._is_relative_path(dep)) {
+      // we only map top level id for now
+      dep = self._solve_aliased_dependency(options['as'][dep], path) || dep;
+    }
+
+    // package name, not a path
+    if (!self._is_relative_path(dep)) {
+      return self._deal_dependency(origin, dep, node, type, done);
+    }
+
+    resolve(dep, {
+      basedir: node_path.dirname(path),
+      extensions: options.extensions
+    }, function (err, real) {
+      if (err) {
+        return done({
+          code: 'MODULE_NOT_FOUND',
+          message: err.message,
+          stack: err.stack,
+          data: {
+            path: dep
+          }
+        });
+      }
+
+      self._deal_dependency(origin, real, node, type, done);
+    });
+  }, callback);
 };
 
 
@@ -236,8 +240,8 @@ Walker.prototype._solve_aliased_dependency = function(dep, env_path) {
 };
 
 
-Walker.prototype._deal_dependency = function(dep, real, node, callback) {
-  node.dependencies[dep] = real;
+Walker.prototype._deal_dependency = function(dep, real, node, type, callback) {
+  node[type][dep] = real;
   var sub_node = this._get_node(real);
   if (!sub_node) {
     sub_node = this._create_node(real);
@@ -287,7 +291,7 @@ Walker.prototype._create_node = function(id) {
   if (!node) {
     node = this.nodes[id] = {
       id: id,
-      dependents: [],
+      // dependents: [],
       entry: id === this.entry,
       foreign: this._is_foreign(id)
     };
