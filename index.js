@@ -39,7 +39,7 @@ function Walker (entry, options, callback) {
 
   makeDefault(options, 'allow_cyclic', true);
   // makeDefault(options, 'strict_require', false);
-  makeDefault(opitons, 'allow_non_literal_require', true);
+  makeDefault(options, 'allow_non_literal_require', true);
   makeDefault(options, 'comment_require', true);
   makeDefault(options, 'require_resolve', true);
   makeDefault(options, 'require_async', true);
