@@ -37,12 +37,15 @@ function Walker (entry, options, callback) {
   this.entry = node_path.resolve(entry);
   this.options = options;
 
-  makeDefault(options, 'allowCyclic', true);
-  makeDefault(options, 'strictRequire', true);
-  makeDefault(options, 'allowAbsolutePath', true);
+  makeDefault(options, 'allow_cyclic', true);
+  // makeDefault(options, 'strict_require', false);
+  makeDefault(opitons, 'allow_non_literal_require', true);
+  makeDefault(options, 'comment_require', true);
+  makeDefault(options, 'require_resolve', true);
+  makeDefault(options, 'require_async', true);
   makeDefault(options, 'extensions', EXTS_NODE);
 
-  if (!this._checkExts()) {
+  if (!this._check_extensions()) {
     throw new Error('Invalid value of `options.extensions`');
   }
 
@@ -52,7 +55,7 @@ function Walker (entry, options, callback) {
 util.inherits(Walker, EE);
 
 // Checks if the `options.extensions` is valid
-Walker.prototype._checkExts = function() {
+Walker.prototype._check_extensions = function() {
   var exts = this.options.extensions;
 
   if (!util.isArray(exts)) {
@@ -87,8 +90,8 @@ Walker.prototype.walk = function() {
   var q = async.queue(function (task, done) {
     // `path` will always be an absolute path.
     var path = task.path;
-    // Each node must be created before `._parseFileDependencies()`
-    self._parseFileDependencies(path, function (err) {
+    // Each node must be created before `._parse_file_dependencies()`
+    self._parse_file_dependencies(path, function (err) {
       if (err) {
         return cb(err);
       }
@@ -98,7 +101,7 @@ Walker.prototype.walk = function() {
 
   // Creates entry node
   // `node` should be created before the task is running.
-  this._createNode(entry);
+  this._create_node(entry);
   q.drain = cb;
   // Adds initial task
   q.push({
@@ -109,20 +112,20 @@ Walker.prototype.walk = function() {
 
 
 // Actually, we do nothing
-Walker.prototype._parseNodeFile = function(path, callback) {
-  this._parseJsonFile(path, callback);
+Walker.prototype._parse_node_file = function(path, callback) {
+  this._parse_json_file(path, callback);
 };
 
 
 // @param {Path} path Absolute path
-Walker.prototype._parseJsonFile = function(path, callback) {
+Walker.prototype._parse_json_file = function(path, callback) {
   var self = this;
   parser.read(path, function (err, content) {
     if (err) {
       return callback(err);
     }
 
-    var node = self._getNode(path);
+    var node = self._get_node(path);
     node.code = content;
     node.dependencies = {};
     callback(null);
@@ -130,12 +133,12 @@ Walker.prototype._parseJsonFile = function(path, callback) {
 };
 
 
-Walker.prototype._parseFileDependencies = function(path, callback) {
-  var node = this._getNode(path);
+Walker.prototype._parse_file_dependencies = function(path, callback) {
+  var node = this._get_node(path);
   var options = this.options;
   var self = this;
   parser.parse(path, {
-    strictRequire: this.options.strictRequire
+    strict_require: this.options.strict_require
 
   // @param {Object} data
   // - code
@@ -163,21 +166,21 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
           }
         };
 
-        if (!options.allowAbsolutePath) {
+        if (!options.allow_absolute_path) {
           return done(); 
         } else {
           self.emit('warn', message);
         }
       }
 
-      if (!self._isRelativePath(dep)) {
+      if (!self._is_relative_path(dep)) {
         // we only map top level id for now
-        dep = self._solveAliasedDependency(options['as'][dep], path) || dep;
+        dep = self._solve_aliased_dependency(options['as'][dep], path) || dep;
       }
 
       // package name, not a path
-      if (!self._isRelativePath(dep)) {
-        return self._dealDependency(origin, dep, node, done);
+      if (!self._is_relative_path(dep)) {
+        return self._deal_dependency(origin, dep, node, done);
       }
 
       resolve(dep, {
@@ -195,7 +198,7 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
           });
         }
 
-        self._dealDependency(origin, real, node, done);
+        self._deal_dependency(origin, real, node, done);
       });
     }, callback);
   });
@@ -211,10 +214,10 @@ Walker.prototype._parseFileDependencies = function(path, callback) {
 // }
 // @param {String} dep path of dependency
 // @param {String} env_path the path of the current file
-Walker.prototype._solveAliasedDependency = function(dep, env_path) {
+Walker.prototype._solve_aliased_dependency = function(dep, env_path) {
   var cwd = this.options.cwd;
 
-  if (!dep || !cwd || !this._isRelativePath(dep)) {
+  if (!dep || !cwd || !this._is_relative_path(dep)) {
     return dep;
   }
 
@@ -233,11 +236,11 @@ Walker.prototype._solveAliasedDependency = function(dep, env_path) {
 };
 
 
-Walker.prototype._dealDependency = function(dep, real, node, callback) {
+Walker.prototype._deal_dependency = function(dep, real, node, callback) {
   node.dependencies[dep] = real;
-  var sub_node = this._getNode(real);
+  var sub_node = this._get_node(real);
   if (!sub_node) {
-    sub_node = this._createNode(real);
+    sub_node = this._create_node(real);
     if (!sub_node.foreign) {
       // only if the node is newly created.
       this.queue.push({
@@ -256,14 +259,14 @@ Walker.prototype._dealDependency = function(dep, real, node, callback) {
   if (circular_trace = circular.trace(sub_node, node, this.nodes)) {
     var message = {
       code: 'CYCLIC_DEPENDENCY',
-      message: 'Cyclic dependency found: \n' + this._printCyclic(circular_trace),
+      message: 'Cyclic dependency found: \n' + this._print_cyclic(circular_trace),
       data: {
         trace: circular_trace,
         path: real
       }
     };
 
-    if (!this.options.allowCyclic) {
+    if (!this.options.allow_cyclic) {
       return callback(message);
     } else {
       this.emit('warn', message);
@@ -278,7 +281,7 @@ Walker.prototype._dealDependency = function(dep, real, node, callback) {
 // @param {string} id 
 // - `path` must be absolute path if is a relative module
 // - package name for foreign module
-Walker.prototype._createNode = function(id) {
+Walker.prototype._create_node = function(id) {
   var node = this.nodes[id];
 
   if (!node) {
@@ -286,24 +289,24 @@ Walker.prototype._createNode = function(id) {
       id: id,
       dependents: [],
       entry: id === this.entry,
-      foreign: this._isForeign(id)
+      foreign: this._is_foreign(id)
     };
   }
   return node;
 };
 
 
-Walker.prototype._isForeign = function(path) {
-  return !this._isAbsolutePath(path);
+Walker.prototype._is_foreign = function(path) {
+  return !this._is_absolute_path(path);
 };
 
 
-Walker.prototype._isAbsolutePath = function(path) {
+Walker.prototype._is_absolute_path = function(path) {
   return node_path.resolve(path) === path.replace(/[\/\\]+$/, '');
 };
 
 
-Walker.prototype._isRelativePath = function(path) {
+Walker.prototype._is_relative_path = function(path) {
   // Actually, this method is called after the parser.js,
   // and all paths are parsed from require(foo),
   // so `foo` will never be affected by windows,
@@ -312,7 +315,7 @@ Walker.prototype._isRelativePath = function(path) {
 };
 
 
-Walker.prototype._getNode = function(path) {
+Walker.prototype._get_node = function(path) {
   return this.nodes[path];
 };
 
@@ -320,7 +323,7 @@ Walker.prototype._getNode = function(path) {
 // 1. <path>
 // 2. <path>
 // 
-Walker.prototype._printCyclic = function(trace) {
+Walker.prototype._print_cyclic = function(trace) {
   var list = trace.map(function (node, index) {
     return index + 1 + ': ' + node.id;
   });
@@ -335,4 +338,3 @@ Walker.prototype._printCyclic = function(trace) {
 
   return list.join('\n') + '\n\n' + flow.join(' -> ');
 };
-

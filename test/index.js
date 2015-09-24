@@ -30,7 +30,7 @@ var cases = [
     desc: 'circular',
     file: 'circular/index.js',
     options: {
-      allowCyclic: false
+      allow_cyclic: false
     },
     expect: function (err, path, nodes, entry) {
       expect(err).not.to.equal(null);
@@ -40,7 +40,7 @@ var cases = [
   {
     desc: 'circular',
     options: {
-      allowCyclic: true
+      allow_cyclic: true
     },
     file: 'circular/index.js',
     expect: function (err, path, nodes, entry) {

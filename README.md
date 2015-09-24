@@ -89,11 +89,12 @@ All options are optional. By default, `walker` works in a very strict mode.
 
 Option | Type | Default | Description
 ------ | ---- | ------- | ------------
-allowCyclic | `Boolean` | true | whether should check cyclic dependencies
-strictRequire | `Boolean` | true | whether should check the usage of method `require()`. If true, the argument of `require()` must be an literal string.
-allowAbsolutePath | `Boolean` | true | whether should allow to require an absolute path.
+allow_cyclic | `Boolean` | true | whether should check cyclic dependencies
+strict_require | `Boolean` | false | whether should check the usage of method `require()`. If true, the argument of `require()` must be an literal string.
+comment_require | `Boolean` | true | 
+allow_absolute_path | `Boolean` | true | whether should allow to require an absolute path.
 extensions | `Array` | `['.js', '.json', '.node']` | see `options.extensions` section
-as | `Object` | `{}` | An object map that define the alias of the parameter of `require` 
+as | `Object` | `{}` | An object map that define the alias of the parameter of `require`
 
 <!-- parseForeignModule | `Boolean` | true | will try to resolve foreign modules by `require.resolve()`. Set this option to false to handle foreign modules yourself. -->
 
@@ -115,9 +116,9 @@ Especially, only tree values below are allowed:
 
 ```js
 {
-  allowCyclic: false,
-  strictRequire: true,
-  allowAbsolutePath: false,
+  allow_cyclic: false,
+  strict_require: true,
+  allow_absolute_path: false,
   extensions: ['.js', '.json']
 }
 ```

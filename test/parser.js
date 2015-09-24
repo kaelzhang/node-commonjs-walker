@@ -10,7 +10,7 @@ var cases = [
     desc: 'could get dependencies',
     file: 'correct.js',
     options: {
-      strictRequire: true
+      strict_require: true
     },
     deps: ['../abc', 'abc', './abc']
   }, 
@@ -18,7 +18,7 @@ var cases = [
     desc: 'no arguments, strict',
     file: 'no-arg.js',
     options: {
-      strictRequire: true
+      strict_require: true
     },
     error: true
   }, 
@@ -26,7 +26,7 @@ var cases = [
     desc: 'no arguments, no strict',
     file: 'no-arg.js',
     options: {
-      strictRequire: false
+      strict_require: false
     },
     deps: ['abc']
   
@@ -35,7 +35,7 @@ var cases = [
     desc: 'more than one arguments, strict',
     file: 'more-than-one-arg.js',
     options: {
-      strictRequire: true
+      strict_require: true
     },
     error: true
 
@@ -44,7 +44,7 @@ var cases = [
     desc: 'more than one arguments, no strict',
     file: 'more-than-one-arg.js',
     options: {
-      strictRequire: false
+      strict_require: false
     },
     deps: ['../abc', './abc']
   },
