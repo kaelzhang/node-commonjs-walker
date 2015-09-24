@@ -292,6 +292,16 @@ var cases = [
       expect('./b' in entry.async).to.equal(false);
       expect(entry.require['./c']).to.equal(node_path.join(node_path.dirname(path), './c.js'));
     }
+  }, {
+    desc: '#21: require in comments',
+    options: {
+    },
+    file: 'require-async/entry-comment.js',
+    expect: function (err, path, nodes, entry) {
+      expect(entry.require['./a']).to.equal(node_path.join(node_path.dirname(path), './a'));
+      expect(entry.resolve['./b']).to.equal(node_path.join(node_path.dirname(path), './b.js'));
+      expect(entry.async['./c.js']).to.equal(node_path.join(node_path.dirname(path), './c.js'));
+    }
   }
 ];
 
