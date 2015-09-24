@@ -142,8 +142,8 @@ Property | Type | Description
 -------- | ---- | -----------
 entry | `Boolean` | whether the current module is the entry point
 foreign | `Boolean` | whether the current module is from a foreign package.
-require | `Object` |
-resolve | `Object` |
+require | `Object` | The `<id>: <path>` map. `id` is the module identifier user `require()`d in the module file.
+resolve | `Object` | 
 async   | `Object` |
 
 
