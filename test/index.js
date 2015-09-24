@@ -246,6 +246,52 @@ var cases = [
       expect(err).to.equal(null);
       expect(entry.require['abc']).to.equal(node_path.join(node_path.dirname(path), './dep.js'));
     }
+  },
+  {
+    desc: '#21: require.resolve',
+    options: {
+    },
+    file: 'require-resolve/entry.js',
+    expect: function (err, path, nodes, entry) {
+      expect(entry.resolve['./a']).to.equal(node_path.join(node_path.dirname(path), './a'));
+      expect(entry.resolve['./b']).to.equal(node_path.join(node_path.dirname(path), './b.js'));
+      expect(entry.require['./c']).to.equal(node_path.join(node_path.dirname(path), './c.js'));
+    }
+  },
+  {
+    desc: '#21: require.resolve: false',
+    options: {
+      require_resolve: false
+    },
+    file: 'require-resolve/entry.js',
+    expect: function (err, path, nodes, entry) {
+      expect('./a' in entry.resolve).to.equal(false);
+      expect('./b' in entry.resolve).to.equal(false);
+      expect(entry.require['./c']).to.equal(node_path.join(node_path.dirname(path), './c.js'));
+    }
+  },
+  {
+    desc: '#21: require.async',
+    options: {
+    },
+    file: 'require-async/entry.js',
+    expect: function (err, path, nodes, entry) {
+      expect(entry.async['./a']).to.equal(node_path.join(node_path.dirname(path), './a'));
+      expect(entry.async['./b']).to.equal(node_path.join(node_path.dirname(path), './b.js'));
+      expect(entry.require['./c']).to.equal(node_path.join(node_path.dirname(path), './c.js'));
+    }
+  },
+  {
+    desc: '#21: require.async: false',
+    options: {
+      require_async: false
+    },
+    file: 'require-async/entry.js',
+    expect: function (err, path, nodes, entry) {
+      expect('./a' in entry.async).to.equal(false);
+      expect('./b' in entry.async).to.equal(false);
+      expect(entry.require['./c']).to.equal(node_path.join(node_path.dirname(path), './c.js'));
+    }
   }
 ];
 
