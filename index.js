@@ -38,7 +38,6 @@ function Walker (entry, options, callback) {
   this.options = options;
 
   makeDefault(options, 'allow_cyclic', true);
-  // makeDefault(options, 'strict_require', false);
   makeDefault(options, 'allow_non_literal_require', true);
   makeDefault(options, 'comment_require', true);
   makeDefault(options, 'require_resolve', true);
@@ -50,6 +49,7 @@ function Walker (entry, options, callback) {
   }
 
   this.callback = callback;
+  this._walk();
 }
 
 util.inherits(Walker, EE);
@@ -68,7 +68,7 @@ Walker.prototype._check_extensions = function() {
 };
 
 
-Walker.prototype.walk = function() {
+Walker.prototype._walk = function() {
   var self = this;
   var entry = this.entry;
 
@@ -111,28 +111,6 @@ Walker.prototype.walk = function() {
 };
 
 
-// Actually, we do nothing
-Walker.prototype._parse_node_file = function(path, callback) {
-  this._parse_json_file(path, callback);
-};
-
-
-// @param {Path} path Absolute path
-Walker.prototype._parse_json_file = function(path, callback) {
-  var self = this;
-  parser.read(path, function (err, content) {
-    if (err) {
-      return callback(err);
-    }
-
-    var node = self._get_node(path);
-    // node.code = content;
-    node.dependencies = {};
-    callback(null);
-  });
-};
-
-
 Walker.prototype._parse_file_dependencies = function(path, callback) {
   var node = this._get_node(path);
   var options = this.options;
@@ -142,7 +120,6 @@ Walker.prototype._parse_file_dependencies = function(path, callback) {
       return callback(err);
     }
     
-    node.code = data.code;
     node.require = {};
     node.resolve = {};
     node.async = {};
@@ -291,7 +268,6 @@ Walker.prototype._create_node = function(id) {
   if (!node) {
     node = this.nodes[id] = {
       id: id,
-      // dependents: [],
       entry: id === this.entry,
       foreign: this._is_foreign(id)
     };

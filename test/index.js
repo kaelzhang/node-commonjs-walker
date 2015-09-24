@@ -13,7 +13,6 @@ var cases = [
     file: 'simplest.js',
     expect: function (err, path, nodes, entry) {
       expect(err).to.equal(null);
-      expect(entry.code.toString()).to.equal("require('abc');");
       expect(nodes['abc'].foreign).to.equal(true);
     }
   },
@@ -337,9 +336,9 @@ describe("walker()", function(){
         };
 
         if (noOptions) {
-          walker(file, callback).walk();
+          walker(file, callback);
         } else {
-          walker(file, options, callback).walk();
+          walker(file, options, callback);
         }
       });
     }
