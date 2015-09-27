@@ -25,6 +25,8 @@ walker('/path/to/entry.js', options, function(err, nodes){
 });
 ```
 
+Returns an [EventEmitter](https://nodejs.org/api/events.html#events_class_events_eventemitter).
+
 Walks down from a entry point, such as `package.main` of commonjs or any JavaScript file based on CommonJS, and tries to create a `walker.Module` instance of the top level. 
 
 - entry `Path` the absolute path of the entry point.
@@ -131,6 +133,17 @@ Especially, only tree values below are allowed:
   extensions: ['.js', '.json']
 }
 ```
+
+## Events
+
+#### Event: `warn`
+
+- message `String`
+
+Emits if there is a warning. Warnings are potential problems that might break your code, including:
+
+- cyclic dependencies
+- require an absolute path
 
 ## Struct: walker.Module
 
