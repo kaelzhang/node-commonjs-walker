@@ -336,9 +336,9 @@ describe("walker()", function(){
         };
 
         if (noOptions) {
-          walker(file, callback);
+          walker().walk(file, callback);
         } else {
-          walker(file, options, callback);
+          walker(options).walk(file, callback);
         }
       });
     }

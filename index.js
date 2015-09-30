@@ -1,7 +1,9 @@
 'use strict';
 
 module.exports = walker;
-walker.Walker = require('./lib/walker');
+
+var Walker = require('./lib/walker');
+walker.Walker = Walker;
 
 function walker (options) {
   options || (options = {});
@@ -15,7 +17,7 @@ function walker (options) {
   makeDefault(options, 'comment_require',           true);
   makeDefault(options, 'require_resolve',           true);
   makeDefault(options, 'require_async',             true);
-  makeDefault(options, 'extensions',                EXTS_NODE);
+  makeDefault(options, 'extensions',                Walker.EXTS_NODE);
   makeDefault(options, 'compilers',                 {});
   makeDefault(options, 'use_global_cache',          true);
 
@@ -23,9 +25,16 @@ function walker (options) {
 }
 
 
+function makeDefault (object, key, value) {
+  object[key] = key in object
+    ? object[key]
+    : value
+}
+
+
 function _Walker (options) {
   this.options = options;
-  this.compilers = {};
+  this.compilers = [];
 }
 
 
@@ -51,6 +60,6 @@ _Walker.prototype.register = function(new_compilers) {
 
 
 _Walker.prototype.walk = function(entry, callback) {
-  new Walker(options, compilers).walk(entry, callback);
+  new Walker(this.options, this.compilers).walk(entry, callback);
   return this;
 };
