@@ -4,6 +4,7 @@ var expect = require('chai').expect;
 var parser = require('../lib/parser');
 var node_path = require('path');
 var util = require('util');
+var fs = require('fs');
 
 var cases = [
   {
@@ -54,9 +55,9 @@ var cases = [
 
 describe("parser.parse()", function(){
   cases.forEach(function (c) {
-    it(c.desc, function(done){
+    it(c.desc, function(done) {
       var file = node_path.join(__dirname, 'fixtures', 'parser', c.file);
-      parser.parse(file, c.options || {}, function (err, result) {
+      parser.parse(file, fs.readFileSync(file).toString(), c.options || {}, function (err, result) {
         done();
         expect(!err).to.equal(!c.error); 
         if (util.isArray(c.deps)) {
