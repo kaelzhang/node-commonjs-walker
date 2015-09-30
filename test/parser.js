@@ -47,9 +47,9 @@ var cases = [
     deps: ['../abc', './abc']
   },
   {
-    desc: 'parsing a json file will not fail',
+    desc: 'parsing a json file will fail',
     file: 'json.json',
-    deps: []
+    error: true
   }
 ];
 

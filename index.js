@@ -2,6 +2,8 @@
 
 module.exports = walker;
 
+var make_array = require('make-array');
+var util = require('util');
 var Walker = require('./lib/walker');
 walker.Walker = Walker;
 
