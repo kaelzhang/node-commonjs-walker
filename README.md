@@ -17,10 +17,10 @@ var walker = require('commonjs-walker');
 - If a module is not found, commonjs-walker will attempt to load the required filename with the added extension of `.js`, `.json`, and then `.node`, according to [File Modules](http://nodejs.org/api/modules.html#modules_file_modules)
 - You can define what extensions should commonjs-walker fallback to by [options.extensions](#optionsextensions), which will be very usefull for browser-side commonjs modules.
 
-## walker(entry, [options], callback)
+## walker([options])
 
 ```js
-walker('/path/to/entry.js', options, function(err, nodes){
+walker(options).parse('/path/to/entry.js', function(err, nodes){
 	// ...
 });
 ```
@@ -60,7 +60,7 @@ a/index.json
 Code:
 
 ```js
-walker('/path/to/index.js', function(err, nodes){
+walker().parse('/path/to/index.js', function(err, nodes){
 	console.log(nodes);
 });
 ```
@@ -77,13 +77,15 @@ Then, the `nodes` object will be something like:
     },
     resolve: {
       './a.png': '/path/to/a.png'
-    }
+    },
+    code: <buffer>
   },
   '/path/to/a.png': {
     require: {}
   }
   '/path/to/a/index.json': {
-    require: {}
+    require: {},
+    code: <buffer>
   },
   'b': {
     foreign: true
