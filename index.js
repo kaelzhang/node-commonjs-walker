@@ -20,6 +20,7 @@ function walker (options) {
   makeDefault(options, 'extensions',                Walker.EXTS_NODE);
   makeDefault(options, 'compilers',                 {});
   makeDefault(options, 'use_global_cache',          true);
+  makeDefault(options, 'as',                        {});
 
   return new _Walker(options);
 }
@@ -41,8 +42,8 @@ function _Walker (options) {
 // @param {string|RegExp} pattern
 // @param {Object|Array.<Object>} new_compilers
 // - compiler: `function(content, options, callback)`
-// - options:
-// - pattern:
+// - options :
+// - pattern :
 _Walker.prototype.register = function(new_compilers) {
   new_compilers = make_array(new_compilers);
 
