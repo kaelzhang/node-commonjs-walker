@@ -4,6 +4,8 @@ module.exports = walker;
 
 var make_array = require('make-array');
 var util = require('util');
+var EE = require('events').EventEmitter;
+
 var Walker = require('./lib/walker');
 walker.Walker = Walker;
 
@@ -40,20 +42,20 @@ function _Walker (options) {
   this.compilers = [];
 }
 
+util.inherits(_Walker, EE);
 
-// @param {string|RegExp} pattern
 // @param {Object|Array.<Object>} new_compilers
 // - compiler: `function(content, options, callback)`
 // - options :
-// - pattern :
+// - test :
 _Walker.prototype.register = function(new_compilers) {
   new_compilers = make_array(new_compilers);
 
   var compilers = this.compilers;
   new_compilers.forEach(function (c) {
-    c.pattern = util.isRegExp(c.pattern)
-      ? c.pattern
-      : new RegExp(c.pattern);
+    c.test = util.isRegExp(c.test)
+      ? c.test
+      : new RegExp(c.test);
 
     compilers.push(c);
   });
@@ -63,6 +65,12 @@ _Walker.prototype.register = function(new_compilers) {
 
 
 _Walker.prototype.walk = function(entry, callback) {
-  new Walker(this.options, this.compilers).walk(entry, callback);
+  var self = this;
+  new Walker(this.options, this.compilers)
+  .on('warn', function (message) {
+    self.emit('warn', message);
+  })
+  .walk(entry, callback);
+
   return this;
 };
