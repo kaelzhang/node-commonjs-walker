@@ -26,7 +26,7 @@ var cases = [
     }
   },
   {
-    desc: 'circular',
+    desc: 'circular, with errors',
     file: 'circular/index.js',
     options: {
       allow_cyclic: false
@@ -37,13 +37,14 @@ var cases = [
     }
   },
   {
-    desc: 'circular',
+    desc: 'circular, with warnings',
     options: {
       allow_cyclic: true
     },
     file: 'circular/index.js',
-    expect: function (err, path, nodes, entry) {
+    expect: function (err, path, nodes, entry, warnings) {
       expect(err).to.equal(null);
+      expect(warnings.length).not.to.equal(0);
     }
   },
   {
@@ -325,6 +326,7 @@ describe("walker()", function(){
 
       i(desc, function(done){
         var file = node_path.join(root, c.file);
+        var warnings = [];
         
         var callback = function (err, nodes) {
           done();
@@ -332,14 +334,18 @@ describe("walker()", function(){
           if (!err && nodes) {
             entry = nodes[file]
           }
-          c.expect(err, file, nodes, entry);
+          c.expect(err, file, nodes, entry, warnings);
         };
 
-        if (noOptions) {
-          walker().walk(file, callback);
-        } else {
-          walker(options).walk(file, callback);
-        }
+        var w = noOptions
+          ? walker()
+          : walker(options);
+
+        w.on('warn', function (message) {
+          warnings.push(message);
+        });
+
+        w.walk(file, callback);
       });
     }
 
