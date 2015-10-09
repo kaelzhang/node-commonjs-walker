@@ -20,7 +20,7 @@ var walker = require('commonjs-walker');
 ## walker([options])
 
 ```js
-walker(options).parse('/path/to/entry.js', function(err, nodes){
+walker(options).walk('/path/to/entry.js', function(err, nodes){
 	// ...
 });
 ```
@@ -60,7 +60,7 @@ a/index.json
 Code:
 
 ```js
-walker().parse('/path/to/index.js', function(err, nodes){
+walker().walk('/path/to/index.js', function(err, nodes){
 	console.log(nodes);
 });
 ```
@@ -124,6 +124,7 @@ Especially, only tree values below are allowed:
 - `['.js']`
 - `['.js', '.json']`,
 - `['.js', '.json', '.node']`
+
 
 ## Frequent Options for Browsers
 
