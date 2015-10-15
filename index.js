@@ -11,11 +11,7 @@ walker.Walker = Walker;
 
 function walker (options) {
   options || (options = {});
-  if(arguments.length == 2){
-    options = {};
-    callback = arguments[1];
-  }
-
+  
   makeDefault(options, 'allow_cyclic',              true);
   makeDefault(options, 'allow_non_literal_require', true);
   makeDefault(options, 'comment_require',           true);

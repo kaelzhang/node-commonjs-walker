@@ -1,6 +1,6 @@
 {
   "name": "commonjs-walker",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "description": "Analyzer and tree walker for commonjs.",
   "main": "index.js",
   "scripts": {
