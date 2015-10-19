@@ -20,9 +20,12 @@ var walker = require('commonjs-walker');
 ## walker([options])
 
 ```js
-walker(options).walk('/path/to/entry.js', function(err, nodes){
-	// ...
-});
+walker(options)
+  .walk('/path/to/entry.js')
+  .walk('/path/to/entry2.js')
+  .done(function(err, nodes){
+  	// ...
+  });
 ```
 
 Returns an [EventEmitter](https://nodejs.org/api/events.html#events_class_events_eventemitter).
@@ -70,7 +73,6 @@ Then, the `nodes` object will be something like:
 ```js
 {
   '/path/to/index.js': {
-    entry: true,
     require: {
       './a': '/path/to/a/index.json',
       'b': 'b'
@@ -156,7 +158,6 @@ Actually, there is no `walker.Module` exists. We only use it to declare and desc
 
 Property | Type | Description
 -------- | ---- | -----------
-entry | `Boolean` | whether the current module is the entry point
 foreign | `Boolean` | whether the current module is from a foreign package.
 require | `Object` | The `<id>: <path>` map. `id` is the module identifier user `require()`d in the module file.
 resolve | `Object` | 

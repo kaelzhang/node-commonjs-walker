@@ -19,7 +19,7 @@ function walker (options) {
   makeDefault(options, 'require_async',             true);
   makeDefault(options, 'extensions',                Walker.EXTS_NODE);
   makeDefault(options, 'compilers',                 {});
-  makeDefault(options, 'use_global_cache',          true);
+  // makeDefault(options, 'use_global_cache',          true);
   makeDefault(options, 'as',                        {});
 
   return new _Walker(options);
