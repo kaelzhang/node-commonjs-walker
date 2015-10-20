@@ -4,8 +4,20 @@ var expect = require('chai').expect;
 var walker = require('../');
 var node_path = require('path');
 var util = require('util');
+var make_array = require('make-array')
 
 var root = node_path.join(__dirname, 'fixtures', 'walker');
+
+function dir_slash (err, path, nodes, entry) {
+  expect(err).to.equal(null);
+  var dep = './cases/dir/';
+  var real = node_path.join( node_path.dirname(path), dep ) + 'index.js';
+  expect(entry.require[dep]).to.equal(real);
+}
+
+function multiple_requires (err, path, nodes, entry) {
+  expect(err).to.equal(null);
+}
 
 var cases = [
   {
@@ -182,21 +194,21 @@ var cases = [
     options: {
     },
     file: 'fallback/dir-slash.js',
-    expect: function (err, path, nodes, entry) {
-      expect(err).to.equal(null);
-      var dep = './cases/dir/';
-      var real = node_path.join( node_path.dirname(path), dep ) + 'index.js';
-      expect(entry.require[dep]).to.equal(real);
-    }
+    expect: dir_slash
   },
   {
     desc: '#13: multiple requires',
     options: {
     },
     file: 'multi-require/index.js',
-    expect: function (err, path, nodes, entry) {
-      expect(err).to.equal(null);
-    }
+    expect: multiple_requires
+  },
+  {
+    desc: '#25: multi-walker',
+    options: {},
+    file: ['fallback/dir-slash.js', 'multi-require/index.js'],
+    expect: [dir_slash, multiple_requires],
+    multi: true
   },
   {
     desc: '#14: parsing a json file will not fail',
@@ -325,16 +337,22 @@ describe("walker()", function(){
       }
 
       i(desc, function(done){
-        var file = node_path.join(root, c.file);
+        var file = make_array(c.file).map(function(f){
+          return node_path.join(root, f);
+        });
         var warnings = [];
+        var tests = make_array(c.expect);
         
         var callback = function (err, nodes) {
           done();
           var entry;
-          if (!err && nodes) {
-            entry = nodes[file]
-          }
-          c.expect(err, file, nodes, entry, warnings);
+
+          file.forEach(function(f, i){
+            if (!err && nodes) {
+              entry = nodes[f]
+            }
+            tests[i](err, f, nodes, entry, warnings);
+          });
         };
 
         var w = noOptions
@@ -345,7 +363,10 @@ describe("walker()", function(){
           warnings.push(message);
         });
 
-        w.walk(file).done(callback);
+        var f = c.multi
+          ? file
+          : file[0]
+        w.walk(f).done(callback);
       });
     }
 
