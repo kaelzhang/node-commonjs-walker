@@ -22,7 +22,10 @@ var walker = require('commonjs-walker');
 ```js
 walker(options)
   .walk('/path/to/entry.js')
+  // walk down another entry
   .walk('/path/to/entry2.js')
+  // walk down many entries
+  .walk(['/path/to/entry3.js', '/path/to/entry4.js'])
   .done(function(err, nodes){
   	// ...
   });
@@ -63,7 +66,7 @@ a/index.json
 Code:
 
 ```js
-walker().walk('/path/to/index.js', function(err, nodes){
+walker().walk('/path/to/index.js').done(function(err, nodes){
 	console.log(nodes);
 });
 ```
