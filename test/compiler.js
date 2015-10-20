@@ -69,7 +69,7 @@ describe("walker(): with compiler", function(){
           w.register(c.compilers);
         }
 
-        w.walk(file, callback);
+        w.walk(file).done(callback);
       });
     }
 

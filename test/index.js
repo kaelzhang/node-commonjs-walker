@@ -345,7 +345,7 @@ describe("walker()", function(){
           warnings.push(message);
         });
 
-        w.walk(file, callback);
+        w.walk(file).done(callback);
       });
     }
 
