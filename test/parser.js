@@ -52,7 +52,6 @@ var cases = [
     error: true
   },
   {
-    only: true,
     desc: '#26: allow return statement',
     file: 'return.js',
     options: {},
