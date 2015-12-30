@@ -50,12 +50,23 @@ var cases = [
     desc: 'parsing a json file will fail',
     file: 'json.json',
     error: true
+  },
+  {
+    only: true,
+    desc: '#26: allow return statement',
+    file: 'return.js',
+    options: {},
+    deps: ['..']
   }
 ];
 
 describe("parser.parse()", function(){
   cases.forEach(function (c) {
-    it(c.desc, function(done) {
+    var _it = c.only
+      ? it.only
+      : it
+
+    _it(c.desc, function(done) {
       var file = node_path.join(__dirname, 'fixtures', 'parser', c.file);
       parser.parse(file, fs.readFileSync(file).toString(), c.options || {}, function (err, result) {
         done();

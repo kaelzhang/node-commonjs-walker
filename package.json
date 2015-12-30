@@ -35,7 +35,7 @@
   "dependencies": {
     "array-unique": "^0.2.1",
     "async": "^1.4.0",
-    "esprima": "^2.4.1",
+    "esprima": "^2.7.1",
     "make-array": "^0.1.2",
     "mix2": "^1.0.1",
     "resolve": "^1.1.6"
