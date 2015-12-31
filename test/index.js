@@ -314,6 +314,14 @@ var cases = [
       expect(entry.resolve['./b']).to.equal(node_path.join(node_path.dirname(path), './b.js'));
       expect(entry.async['./c.js']).to.equal(node_path.join(node_path.dirname(path), './c.js'));
     }
+  }, {
+    desc: '#21: require(..)',
+    options: {},
+    file: 'require-dot/lib/require.js',
+    expect: function (err, path, nodes, entry) {
+      expect(entry.require['.']).to.equal(node_path.join(node_path.dirname(path), './index.js'));
+      expect(entry.require['..']).to.equal(node_path.join(node_path.dirname(path), '../index.js'));
+    }
   }
 ];
 
