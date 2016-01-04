@@ -56,6 +56,15 @@ var cases = [
     file: 'return.js',
     options: {},
     deps: ['..']
+  },
+  {
+    desc: '#28: uses original line code',
+    file: 'parse-error.js',
+    options: {},
+    error: true,
+    expect: function (err) {
+      expect(/Line 1/.test(err.message)).to.equal(true)
+    }
   }
 ];
 
@@ -69,10 +78,16 @@ describe("parser.parse()", function(){
       var file = node_path.join(__dirname, 'fixtures', 'parser', c.file);
       parser.parse(file, fs.readFileSync(file).toString(), c.options || {}, function (err, result) {
         done();
-        expect(!err).to.equal(!c.error); 
+        if (c.expect) {
+          c.expect(err, result)
+        } else {
+          expect(!err).to.equal(!c.error);
+        }
+
         if (util.isArray(c.deps)) {
           expect(result.require.sort()).to.deep.equal(c.deps.sort());
         }
+        
       });
     });
   });
