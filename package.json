@@ -1,6 +1,6 @@
 {
   "name": "commonjs-walker",
-  "version": "7.0.3",
+  "version": "7.1.0",
   "description": "Analyzer and tree walker for commonjs.",
   "main": "index.js",
   "scripts": {
@@ -38,6 +38,7 @@
     "esprima": "^2.7.1",
     "make-array": "^0.1.2",
     "mix2": "^1.0.1",
+    "print-code": "^1.0.1",
     "resolve": "^1.1.6"
   }
 }
