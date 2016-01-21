@@ -83,14 +83,14 @@ Then, the `nodes` object will be something like:
     resolve: {
       './a.png': '/path/to/a.png'
     },
-    code: <buffer>
+    content: <buffer>
   },
   '/path/to/a.png': {
     require: {}
   }
   '/path/to/a/index.json': {
     require: {},
-    code: <buffer>
+    content: <buffer>
   },
   'b': {
     foreign: true
@@ -112,8 +112,8 @@ require_resolve | `Boolean` | true | whether should analysis the usage of `requi
 require_async | `Boolean` | true | whether should record the usage of `require.async()`.
 allow_absolute_path | `Boolean` | true | whether should allow to require an absolute path.
 extensions | `Array` | `['.js', '.json', '.node']` | see `options.extensions` section
-as | `Object` | `{}` | An object map that define the alias of the parameter of `require`
 
+<!-- as | `Object` | `{}` | An object map that define the alias of the parameter of `require` -->
 <!-- parseForeignModule | `Boolean` | true | will try to resolve foreign modules by `require.resolve()`. Set this option to false to handle foreign modules yourself. -->
 
 #### options.extensions
@@ -130,7 +130,6 @@ Especially, only tree values below are allowed:
 - `['.js', '.json']`,
 - `['.js', '.json', '.node']`
 
-
 ## Frequent Options for Browsers
 
 ```js
@@ -141,6 +140,20 @@ Especially, only tree values below are allowed:
   extensions: ['.js', '.json']
 }
 ```
+
+## .register(compiler)
+## .register(compilers)
+
+Register compilers to precompile a file
+
+- **compiler**
+  - **compiler.test** `RegExp|String` to match the given path
+  - **compiler.compiler** `function(content, options, callback)`
+    - callback `function(err, result)`
+      - err `Error=null`
+      - result.content `String` the compiled content.
+      - result.js `Boolean=false` to indicate that if the compiled content is an javascript file.
+      - result.json `Boolean=false` to indicate that if the compiled content is a json file.
 
 ## Events
 
